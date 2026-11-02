@@ -1,0 +1,37 @@
+{
+  "name": "zynox-live-ia-levi3d",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ZYNOX LIVE IA — LEVI 3D: apresentador virtual 3D para lives",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run typecheck && npm run test",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "engines": {
+    "node": ">=20.9"
+  },
+  "dependencies": {
+    "@pixiv/three-vrm": "^3.5.5",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
+    "next": "^15.5.28",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
+    "three": "^0.187.0",
+    "zustand": "^5.0.16"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.187.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
+  }
+}

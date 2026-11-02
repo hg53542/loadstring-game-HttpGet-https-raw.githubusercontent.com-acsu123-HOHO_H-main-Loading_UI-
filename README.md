@@ -1,47 +1,135 @@
-# Live 3D
+# ZYNOX LIVE IA — LEVI 3D
 
-Cenário 3D para transmissões ao vivo, feito com [Three.js](https://threejs.org/). Roda direto no navegador e pode ser usado como **Fonte de Navegador** no OBS / Streamlabs.
+Apresentador virtual 3D para lives: um personagem inspirado na estética de príncipe
+demoníaco de anime, que respira, pisca, olha, gesticula, muda de emoção e se transforma.
 
-## Recursos
+> **Versão 0.1 — Etapa 1 (base do projeto).**
+> O personagem atual é um **modelo provisório** gerado em código. Ele NÃO é o
+> personagem final — a interface mostra o selo "MODELO PROVISÓRIO" o tempo todo.
 
-- Palco com luzes neon, arcos animados, partículas e telão com equalizador
-- Avatar animado (respira, pisca, acena quando chega mensagem)
-- **Reage ao microfone**: boca, cabeça e luzes acompanham sua voz
-- Selo **AO VIVO**, cronômetro e contador de espectadores
-- Chat sobreposto (com mensagens de demonstração ou digitadas por você)
-- 3 câmeras com transição suave + órbita automática
+| Painel | Forma demoníaca | Corpo inteiro |
+|---|---|---|
+| ![Painel](docs/img/painel.png) | ![Demônio](docs/img/forma-demoniaca.png) | ![Comemorando](docs/img/corpo-comemorando.png) |
 
-## Como usar
+<sub>Capturas do teste automatizado (renderização por software, sem GPU).</sub>
 
-Sirva a pasta com qualquer servidor estático (o microfone exige `http://localhost` ou HTTPS):
+## O que funciona hoje
 
-```bash
-python3 -m http.server 8080
-# abra http://localhost:8080
+| Recurso | Estado |
+|---|---|
+| Avatar 3D real (malhas 3D com esqueleto humanoide padrão VRM) | ✅ provisório |
+| Cabelo loiro espetado, roupa de guerreiro (armadura, ombreiras, capa, espada) | ✅ provisório |
+| Respiração (peito, ombros, capa), piscadas naturais (incl. duplas), olhar e cabeça | ✅ |
+| 6 emoções com transição suave (rosto + postura) | ✅ |
+| 8 gestos: acenar, concordar, negar, rir, comemorar, pensar, apontar, dar de ombros | ✅ |
+| Transformação demoníaca gradual (chifres, olhos, marcas, aura, luz) | ✅ |
+| Câmeras (rosto, busto, corpo, livre) e 3 iluminações | ✅ |
+| Página de visualização `/viewer` (vertical, fundo transparente p/ OBS) | ✅ |
+| Painel `/admin` para testar tudo + atalhos de teclado | ✅ |
+| Painel controla o viewer em outra aba do mesmo navegador | ✅ |
+| Carregar um arquivo `.vrm` para teste (adaptador pronto) | ⚠️ implementado, testado só com modelo simulado |
+| Voz, sincronização labial, IA, TikTok, OBS, cenários, batalhas, universo | ⏳ próximas etapas ([roadmap](docs/ROADMAP.md)) |
+
+## Requisitos (Windows 11)
+
+- **Node.js 22 LTS** (ou 20.9+) — instale pelo site oficial nodejs.org.
+- Navegador Chrome ou Edge atualizado.
+- Testado para rodar em notebook Intel Core i5-1334U / 8 GB RAM (GPU integrada Iris Xe):
+  use `?quality=baixa` se o FPS ficar abaixo de 30.
+
+## Como rodar
+
+No PowerShell, dentro da pasta do projeto:
+
+```powershell
+npm install        # primeira vez
+npm run dev        # modo desenvolvimento
 ```
 
-### Atalhos
+Abra:
 
-| Tecla | Ação |
-|-------|------|
-| `1` `2` `3` | Trocar câmera |
-| `O` | Liga/desliga órbita automática |
-| `C` | Trocar cor do cenário |
-| `H` | Esconder/mostrar painel |
+- **http://localhost:3000/admin** — painel com pré-visualização e controles
+- **http://localhost:3000/viewer** — personagem em tela cheia
 
-### Parâmetros de URL
+Para uso contínuo (mais leve que o modo dev):
+
+```powershell
+npm run build
+npm start
+```
+
+Tudo funciona **offline** depois do `npm install` — não há chamadas a APIs externas.
+
+## Como testar
+
+```powershell
+npm test           # 43 testes automatizados (animação, comandos, modelo, gestos, URL)
+npm run typecheck  # checagem de tipos TypeScript
+npm run check      # os dois acima
+```
+
+Teste no navegador (opcional, gera capturas em `smoke-output/`), com o servidor rodando:
+
+```powershell
+npm install --no-save playwright
+npx playwright install chromium
+npm run smoke
+```
+
+### Roteiro de teste manual
+
+1. Abra `/admin`. O Levi deve respirar (peito e ombros) e piscar sozinho a cada 2–6 s.
+   O contador "Piscadas" no painel sobe.
+2. Clique nas emoções — o rosto e a postura mudam suavemente.
+3. Clique nos gestos (ou teclas `1`–`5`). "Acenar" deve ficar com a mão ao lado da cabeça.
+4. Clique em **😈 Transformar** (ou tecla `D`) com a luz **Demoníaco**: chifres crescem, olhos ficam vermelhos.
+5. Troque as câmeras; em **Livre** arraste com o mouse.
+6. Abra `/viewer` em outra aba e use o painel: o viewer repete os comandos.
+
+## Atalhos do painel
+
+`1` acenar · `2` concordar · `3` rir · `4` comemorar · `5` pensar · `B` piscar · `D` liga/desliga forma demoníaca
+
+## Parâmetros do `/viewer` (e `/admin`)
 
 | Parâmetro | Efeito |
-|-----------|--------|
-| `obs=1` | Esconde o painel de controles |
-| `transparent=1` | Fundo transparente (para sobrepor à câmera no OBS) |
-| `title=...` / `sub=...` | Define título e subtítulo |
-| `nobots=1` | Desliga as mensagens de demonstração |
+|---|---|
+| `transparent=1` | Fundo transparente (para OBS) |
+| `camera=rosto\|busto\|corpo\|livre` | Enquadramento inicial |
+| `lighting=estudio\|dramatico\|demoniaco` | Iluminação inicial |
+| `quality=baixa\|media\|alta` | Resolução/sombras (baixa = notebooks) |
+| `nobadge=1` | Esconde o selo "MODELO PROVISÓRIO" (só para capturas internas) |
+| `vrm=/models/arquivo.vrm` | Usa um VRM de `public/models/` (somente caminhos locais) |
 
-Exemplo para OBS: `http://localhost:8080/?obs=1&title=Live%20de%20Sexta`
+### OBS (prévia — integração completa na etapa 5)
 
-### No OBS
+Fontes → **+** → *Navegador* → URL `http://localhost:3000/viewer?transparent=1&camera=busto&quality=baixa`,
+largura **1080**, altura **1920**. Nada aqui inicia transmissão: a live só começa quando você
+clicar em "Iniciar transmissão" no OBS.
 
-1. *Fontes → + → Navegador*
-2. URL: o endereço acima, largura 1920, altura 1080
-3. Para usar o microfone dentro do OBS, abra a página uma vez no navegador e use *Interagir* na fonte para clicar em “🎤 Microfone”.
+> Limitação atual: o painel controla o viewer por BroadcastChannel, que funciona entre abas
+> do mesmo navegador, mas **não** alcança o navegador interno do OBS. Isso será resolvido
+> com um servidor WebSocket local na etapa do OBS.
+
+## Estrutura
+
+```
+src/
+  app/                 Rotas Next.js: / (início), /admin, /viewer
+  core/                Lógica pura (sem React/Three) — testável em Node
+    animation/         AnimationController + camadas (respiração, piscada, cabeça, emoções, gestos, demônio)
+    control/           Protocolo de comandos validados + barramento entre abas
+  avatar/              Renderização 3D
+    procedural/        Modelo PROVISÓRIO do Levi feito em código
+    rigs/              Adaptadores Pose → modelo (ProceduralRig, VrmRig)
+    scene/             Câmera, iluminação, presets
+    vrm/               Carregador de arquivos .vrm
+  state/               Estado da cena (zustand) e runtime (controlador + comandos)
+  ui/                  Telas do painel e do visualizador
+  modules/             Módulos futuros (voz, IA, TikTok, OBS, cenários, batalhas, universo, banco)
+docs/                  Arquitetura, avatar, roadmap, licenças
+scripts/smoke.mjs      Teste no navegador
+```
+
+Mais detalhes: [Arquitetura](docs/ARQUITETURA.md) · [Avatar e modelo final](docs/AVATAR.md) ·
+[Roadmap](docs/ROADMAP.md) · [Licenças](docs/LICENCAS.md)

@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+.env*.local
+# Modelos e dados locais nunca vão para o git (licenças e tamanho)
+public/models/*.vrm
+data/*.sqlite*
+smoke-output/
