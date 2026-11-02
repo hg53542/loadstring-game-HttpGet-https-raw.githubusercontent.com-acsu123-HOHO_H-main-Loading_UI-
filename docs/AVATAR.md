@@ -9,8 +9,18 @@ desenvolver e testar animação, câmera, luz e painel **antes** de existir o mo
 Ele é sinalizado como provisório em três lugares: `ProceduralRig.isPlaceholder = true`,
 selo "MODELO PROVISÓRIO" no `/viewer` e `/admin`, e tag "provisório" no status do painel.
 
-Limitações conhecidas do provisório: corpo feito de primitivas (aparência de boneco),
-mãos sem dedos, rosto desenhado com discos (sem malha facial deformável), cabelo sem física.
+**Estilo anime (cel shading):** sombra em 3 faixas (`MeshToonMaterial`), contorno preto
+por casco invertido, cabeça com queixo em V e olhos de anime (íris em degradê, brilhos,
+cílio com "asinha"). Ver `src/avatar/procedural/toon.ts`.
+
+**Identidade própria:** o Levi não copia nenhum personagem existente. Olhos âmbar,
+mechas frontais próprias, sobretudo carmesim e roxo com abas longas, chifres e marcas
+nas bochechas só na forma demoníaca. Não use traços característicos de personagens de
+anime existentes (cor dos olhos, roupa, símbolos ou marcas típicas): além de não ser
+original, isso gera risco de denúncia numa live monetizada.
+
+Limitações conhecidas do provisório: corpo feito de primitivas, mãos sem dedos, rosto
+desenhado com discos (sem malha facial deformável), cabelo sem física.
 
 ## Personagem final: arquivo VRM
 

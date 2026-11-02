@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { HumanBone } from '@/core/animation/types';
+import { createAnimeHeadGeometry, createOutlineMaterial, createToonGradient, HEAD_R, surfaceZ } from './toon';
 
 /**
  * LEVI — MODELO PROVISÓRIO PROCEDURAL.
@@ -50,10 +51,10 @@ export interface LeviModel {
     marks: THREE.Mesh[];
     aura: THREE.Mesh;
     light: THREE.PointLight;
-    hairMat: THREE.MeshStandardMaterial;
+    hairMat: THREE.MeshToonMaterial;
     scleraMat: THREE.MeshBasicMaterial;
-    irisMat: THREE.MeshStandardMaterial;
-    trimMat: THREE.MeshStandardMaterial;
+    irisMat: THREE.MeshBasicMaterial;
+    trimMat: THREE.MeshToonMaterial;
   };
   materials: THREE.Material[];
   geometries: THREE.BufferGeometry[];
@@ -66,8 +67,11 @@ export function buildLevi(): LeviModel {
   const geo = <T extends THREE.BufferGeometry>(g: T) => (geometries.push(g), g);
 
   const P = LEVI_PALETTE;
-  const std = (color: string, rough = 0.7, metal = 0, extra: THREE.MeshStandardMaterialParameters = {}) =>
-    track(new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal, ...extra }));
+  // Cel shading: todos os materiais "de corpo" usam sombra em faixas, como em anime.
+  const gradientMap = createToonGradient();
+  const outlineMat = track(createOutlineMaterial());
+  const std = (color: string, _rough = 0.7, _metal = 0, extra: THREE.MeshToonMaterialParameters = {}) =>
+    track(new THREE.MeshToonMaterial({ color, gradientMap, ...extra }));
 
   const skin = std(P.skin, 0.65);
   const hairMat = std(P.hair, 0.45, 0.05, { emissive: new THREE.Color('#ff6a00'), emissiveIntensity: 0 });
@@ -80,10 +84,17 @@ export function buildLevi(): LeviModel {
   const capeOut = std(P.coat, 0.85, 0, { side: THREE.FrontSide });
   const capeIn = std(P.coatTrim, 0.7, 0, { side: THREE.BackSide });
 
-  const mesh = (g: THREE.BufferGeometry, m: THREE.Material, shadow = true) => {
+  /** Malha com sombra e contorno de anime (casco invertido que compartilha a geometria). */
+  const mesh = (g: THREE.BufferGeometry, m: THREE.Material, shadow = true, outline = shadow) => {
     const o = new THREE.Mesh(geo(g), m);
     o.castShadow = shadow;
     o.receiveShadow = shadow;
+    if (outline) {
+      const ol = new THREE.Mesh(o.geometry, outlineMat);
+      ol.name = 'contorno';
+      ol.raycast = () => {};
+      o.add(ol);
+    }
     return o;
   };
   const group = (name: string, x = 0, y = 0, z = 0) => {
@@ -146,15 +157,17 @@ export function buildLevi(): LeviModel {
   const buckle = mesh(new THREE.BoxGeometry(0.05, 0.04, 0.015), gold);
   buckle.position.set(0, 0.06, 0.118);
   hips.add(buckle);
-  // Aba frontal do sobretudo
-  const tasset = mesh(new THREE.BoxGeometry(0.2, 0.32, 0.02), coat);
-  tasset.position.set(0, -0.12, 0.11);
-  tasset.rotation.x = 0.08;
-  hips.add(tasset);
-  const tassetTrim = mesh(new THREE.BoxGeometry(0.205, 0.02, 0.025), trimMat);
-  tassetTrim.position.set(0, -0.28, 0.122);
-  tassetTrim.rotation.x = 0.08;
-  hips.add(tassetTrim);
+  // Abas longas do sobretudo: cone aberto na frente (deixa as pernas à mostra ao andar).
+  const skirtOpen = Math.PI * 0.42; // abertura frontal
+  const skirtGeo = new THREE.CylinderGeometry(0.165, 0.25, 0.5, 28, 1, true, Math.PI / 2 + skirtOpen / 2, Math.PI * 2 - skirtOpen);
+  const coatTails = mesh(skirtGeo, track(new THREE.MeshToonMaterial({ color: P.coat, gradientMap, side: THREE.DoubleSide })));
+  coatTails.position.y = -0.2;
+  hips.add(coatTails);
+  // Barra vermelha nas abas
+  const hemGeo = new THREE.CylinderGeometry(0.252, 0.256, 0.035, 28, 1, true, Math.PI / 2 + skirtOpen / 2, Math.PI * 2 - skirtOpen);
+  const hem = mesh(hemGeo, track(new THREE.MeshToonMaterial({ color: P.coatTrim, gradientMap, side: THREE.DoubleSide })), true, false);
+  hem.position.y = -0.43;
+  hips.add(hem);
 
   const abdomen = mesh(new THREE.CapsuleGeometry(0.12, 0.12, 6, 18), coat);
   abdomen.position.y = 0.08;
@@ -165,12 +178,6 @@ export function buildLevi(): LeviModel {
   torso.position.y = 0.1;
   torso.scale.set(1.15, 1, 0.78);
   chest.add(torso);
-  // Peitoral de armadura com bordas douradas
-  const plate = mesh(new THREE.SphereGeometry(0.15, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.62), armor);
-  plate.rotation.x = Math.PI / 2;
-  plate.scale.set(1.05, 0.55, 0.95);
-  plate.position.set(0, 0.11, 0.035);
-  chest.add(plate);
   // Lapelas douradas em V
   for (const s of [1, -1]) {
     const lapel = mesh(new THREE.BoxGeometry(0.012, 0.2, 0.012), gold);
@@ -269,10 +276,6 @@ export function buildLevi(): LeviModel {
     bootTrim.rotation.x = Math.PI / 2;
     bootTrim.position.y = -0.16;
     bones[`${side}LowerLeg`].add(bootTrim);
-    const knee = mesh(new THREE.SphereGeometry(0.05, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), armor);
-    knee.rotation.x = Math.PI / 2;
-    knee.position.set(0, -0.01, 0.045);
-    bones[`${side}LowerLeg`].add(knee);
     const foot = mesh(new THREE.BoxGeometry(0.1, 0.06, 0.22), leather);
     foot.position.set(0, -0.025, 0.05);
     bones[`${side}Foot`].add(foot);
@@ -291,84 +294,122 @@ export function buildLevi(): LeviModel {
   sword.add(sheath, guard, grip, pommel);
   hips.add(sword);
 
-  // ---------- Cabeça ----------
-  const HEAD_R = 0.12;
+  // ---------- Cabeça (formato anime: queixo em V, rosto achatado) ----------
   const headCenter = group('headCenter', 0, 0.1, 0);
   head.add(headCenter);
-  const skull = mesh(new THREE.SphereGeometry(HEAD_R, 32, 24), skin);
-  skull.scale.set(0.95, 1, 0.98);
+  const skull = mesh(createAnimeHeadGeometry(), skin);
   headCenter.add(skull);
+  /** Cola um elemento do rosto na pele, um pouco à frente para não "afundar". */
+  const onFace = (o: THREE.Object3D, x: number, y: number, lift = 0.0015) => {
+    o.position.set(x, y, surfaceZ(x, y) + lift);
+    return o;
+  };
   for (const s of [1, -1]) {
-    const ear = mesh(new THREE.SphereGeometry(0.022, 10, 8), skin);
-    ear.scale.set(0.5, 1.2, 0.9);
-    ear.position.set(0.112 * s, -0.005, 0);
+    const ear = mesh(new THREE.SphereGeometry(0.02, 10, 8), skin);
+    ear.scale.set(0.5, 1.25, 0.9);
+    ear.position.set(0.11 * s, -0.008, -0.005);
     headCenter.add(ear);
   }
-  const nose = mesh(new THREE.ConeGeometry(0.009, 0.025, 8), skin);
-  nose.rotation.x = Math.PI / 2 + 0.4;
-  nose.position.set(0, -0.025, 0.12);
-  headCenter.add(nose);
+  // Nariz de anime: só uma pequena sombra triangular.
+  const noseMat = track(new THREE.MeshBasicMaterial({ color: '#d8a48c' }));
+  const nose = new THREE.Mesh(geo(new THREE.CircleGeometry(0.0045, 3)), noseMat);
+  nose.rotation.z = -Math.PI / 2; // ponta para baixo
+  nose.scale.set(1, 0.7, 1);
+  headCenter.add(onFace(nose, 0.002, -0.03));
 
-  // Olhos (estilo anime: grandes, íris dourada)
+  // Olhos de anime: íris com degradê, brilhos, cílio superior grosso com "asinha" e linha inferior.
+  let irisTex: THREE.Texture | null = null;
+  if (typeof document !== 'undefined') {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const ctx = c.getContext('2d');
+    if (ctx) {
+      const g = ctx.createLinearGradient(0, 0, 0, 64);
+      g.addColorStop(0, '#3a3a3a');
+      g.addColorStop(0.45, '#a8a8a8');
+      g.addColorStop(1, '#ffffff');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 64, 64);
+      irisTex = new THREE.CanvasTexture(c);
+      irisTex.colorSpace = THREE.SRGBColorSpace;
+    }
+  }
   const scleraMat = track(new THREE.MeshBasicMaterial({ color: P.eyeWhite }));
-  const irisMat = std(P.iris, 0.3, 0, { emissive: new THREE.Color(P.irisDemon), emissiveIntensity: 0 });
-  const pupilMat = track(new THREE.MeshBasicMaterial({ color: '#120808' }));
+  const irisMat = track(new THREE.MeshBasicMaterial({ color: P.iris, map: irisTex }));
+  const irisRingMat = track(new THREE.MeshBasicMaterial({ color: '#4a2a08' }));
+  const pupilMat = track(new THREE.MeshBasicMaterial({ color: '#140808' }));
   const shineMat = track(new THREE.MeshBasicMaterial({ color: '#ffffff' }));
-  const lashMat = track(new THREE.MeshBasicMaterial({ color: '#2a1a10' }));
+  const lashMat = track(new THREE.MeshBasicMaterial({ color: '#24140c' }));
   const eyes: LeviModel['face']['eyes'] = [];
   for (const s of [1, -1] as const) {
-    const eg = group(`olho_${s === 1 ? 'esq' : 'dir'}`, 0.043 * s, 0.002, 0.109);
-    eg.rotation.y = 0.32 * s;
-    const sclera = new THREE.Mesh(geo(new THREE.CircleGeometry(0.026, 24)), scleraMat);
-    sclera.scale.set(1, 1.18, 1);
-    const iris = group('iris', 0, -0.002, 0.001);
-    const irisDisc = new THREE.Mesh(geo(new THREE.CircleGeometry(0.018, 24)), irisMat);
-    irisDisc.scale.set(0.9, 1.15, 1);
-    const pupil = new THREE.Mesh(geo(new THREE.CircleGeometry(0.008, 16)), pupilMat);
-    pupil.position.z = 0.0005;
-    pupil.scale.set(0.9, 1.3, 1);
-    const shine = new THREE.Mesh(geo(new THREE.CircleGeometry(0.005, 12)), shineMat);
-    shine.position.set(0.006, 0.009, 0.001);
-    iris.add(irisDisc, pupil, shine);
-    const lash = new THREE.Mesh(geo(new THREE.TorusGeometry(0.027, 0.0035, 4, 20, Math.PI)), lashMat);
-    lash.scale.set(1, 1.1, 1);
-    lash.position.z = 0.001;
-    eg.add(sclera, iris, lash);
+    const eg = group(`olho_${s === 1 ? 'esq' : 'dir'}`);
+    onFace(eg, 0.042 * s, -0.004, 0.0012);
+    eg.rotation.y = 0.3 * s;
+    const sclera = new THREE.Mesh(geo(new THREE.CircleGeometry(0.025, 28)), scleraMat);
+    sclera.scale.set(1.05, 1.15, 1);
+    const iris = group('iris', 0, -0.002, 0.0006);
+    const irisDisc = new THREE.Mesh(geo(new THREE.CircleGeometry(0.0185, 28)), irisMat);
+    const ring = new THREE.Mesh(geo(new THREE.RingGeometry(0.0168, 0.0188, 28)), irisRingMat);
+    ring.position.z = 0.0002;
+    const pupil = new THREE.Mesh(geo(new THREE.CircleGeometry(0.0072, 18)), pupilMat);
+    pupil.position.z = 0.0003;
+    pupil.scale.set(0.8, 1.25, 1);
+    const shineBig = new THREE.Mesh(geo(new THREE.CircleGeometry(0.0055, 14)), shineMat);
+    shineBig.position.set(0.006 * s, 0.008, 0.0006);
+    const shineSmall = new THREE.Mesh(geo(new THREE.CircleGeometry(0.0024, 10)), shineMat);
+    shineSmall.position.set(-0.005 * s, -0.008, 0.0006);
+    iris.add(irisDisc, ring, pupil, shineBig, shineSmall);
+    iris.scale.set(0.95, 1.2, 1);
+    // Cílio superior: arco grosso + "asinha" no canto externo.
+    const upper = new THREE.Mesh(geo(new THREE.TorusGeometry(0.0265, 0.0042, 4, 24, Math.PI * 0.92)), lashMat);
+    upper.rotation.z = Math.PI * 0.04;
+    upper.scale.set(1.05, 1.12, 0.3);
+    upper.position.z = 0.0009;
+    const wing = new THREE.Mesh(geo(new THREE.BoxGeometry(0.013, 0.0042, 0.001)), lashMat);
+    wing.position.set(0.029 * s, 0.003, 0.0009);
+    wing.rotation.z = 0.45 * s;
+    // Linha inferior discreta.
+    const lower = new THREE.Mesh(geo(new THREE.TorusGeometry(0.024, 0.0011, 3, 16, Math.PI * 0.45)), lashMat);
+    lower.rotation.z = -Math.PI / 2 - Math.PI * 0.225 + 0.25 * s;
+    lower.scale.set(1.05, 1.1, 0.3);
+    lower.position.z = 0.0009;
+    eg.add(sclera, iris, upper, wing, lower);
     headCenter.add(eg);
     eyes.push({ group: eg, iris, side: s });
   }
-  // Sobrancelhas
-  const browMat = std(P.brow, 0.6);
+  // Sobrancelhas finas e retas, levemente inclinadas (ar confiante).
+  const browMat = track(new THREE.MeshBasicMaterial({ color: '#9c6f18' }));
   const brows: LeviModel['face']['brows'] = [];
   for (const s of [1, -1] as const) {
-    const b = mesh(new THREE.BoxGeometry(0.04, 0.0065, 0.006), browMat, false);
-    b.position.set(0.045 * s, 0.045, 0.113);
+    const b = new THREE.Mesh(geo(new THREE.BoxGeometry(0.038, 0.0042, 0.002)), browMat);
+    onFace(b, 0.044 * s, 0.04, 0.003);
     b.rotation.y = 0.3 * s;
     headCenter.add(b);
-    brows.push({ mesh: b, side: s, baseY: 0.045 });
+    brows.push({ mesh: b, side: s, baseY: b.position.y });
   }
   // Boca
   const mouthMat = track(new THREE.MeshBasicMaterial({ color: P.mouth }));
-  const mouthGroup = group('boca', 0, -0.058, 0.113);
-  mouthGroup.rotation.x = -0.25;
+  const mouthGroup = group('boca');
+  onFace(mouthGroup, 0, -0.06, 0.0015);
+  mouthGroup.rotation.x = -0.3;
   headCenter.add(mouthGroup);
-  const mouthOpen = new THREE.Mesh(geo(new THREE.CircleGeometry(0.016, 20)), mouthMat);
-  const smile = new THREE.Mesh(geo(new THREE.TorusGeometry(0.016, 0.0025, 4, 16, Math.PI)), mouthMat);
+  const mouthOpen = new THREE.Mesh(geo(new THREE.CircleGeometry(0.013, 20)), mouthMat);
+  const smile = new THREE.Mesh(geo(new THREE.TorusGeometry(0.013, 0.0018, 4, 16, Math.PI)), mouthMat);
   smile.rotation.z = Math.PI; // arco em "U"
-  smile.position.set(0, 0.012, 0.001);
-  const frown = new THREE.Mesh(geo(new THREE.TorusGeometry(0.014, 0.0025, 4, 16, Math.PI)), mouthMat);
-  frown.position.set(0, -0.008, 0.001);
-  const mouthLine = new THREE.Mesh(geo(new THREE.PlaneGeometry(0.024, 0.0035)), mouthMat);
+  smile.position.set(0, 0.01, 0.0005);
+  const frown = new THREE.Mesh(geo(new THREE.TorusGeometry(0.011, 0.0018, 4, 16, Math.PI)), mouthMat);
+  frown.position.set(0, -0.007, 0.0005);
+  const mouthLine = new THREE.Mesh(geo(new THREE.PlaneGeometry(0.016, 0.0022)), mouthMat);
   mouthGroup.add(mouthOpen, smile, frown, mouthLine);
 
-  // Marcas demoníacas nas bochechas
+  // Marcas demoníacas nas bochechas (aparecem só na transformação)
   const markMat = track(new THREE.MeshBasicMaterial({ color: '#ff1a3c', transparent: true, opacity: 0 }));
   const marks: THREE.Mesh[] = [];
   for (const s of [1, -1]) {
     for (let i = 0; i < 2; i++) {
-      const m = new THREE.Mesh(geo(new THREE.PlaneGeometry(0.03, 0.004)), markMat);
-      m.position.set(0.068 * s, -0.03 - i * 0.012, 0.094);
-      m.rotation.set(0, 0.6 * s, -0.25 * s);
+      const m = new THREE.Mesh(geo(new THREE.PlaneGeometry(0.024, 0.0035)), markMat);
+      onFace(m, 0.062 * s, -0.034 - i * 0.011, 0.0015);
+      m.rotation.set(0, 0.55 * s, -0.25 * s);
       headCenter.add(m);
       marks.push(m);
     }
@@ -488,7 +529,7 @@ export function buildLevi(): LeviModel {
     bones,
     hipsBaseY,
     face: { eyes, brows, mouthOpen, smile, frown, mouthLine },
-    breathTargets: [torso, plate, shoulders],
+    breathTargets: [torso, shoulders],
     cape,
     demon: { horns, marks, aura, light, hairMat, scleraMat, irisMat, trimMat },
     materials,

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { clamp, lerp } from '@/core/animation/math';
+import { clamp } from '@/core/animation/math';
 import { HUMAN_BONES, type Pose } from '@/core/animation/types';
 import { buildLevi, LEVI_PALETTE, type LeviModel } from '../procedural/buildLevi';
 import type { AvatarRig } from './types';
@@ -98,7 +98,6 @@ export class ProceduralRig implements AvatarRig {
     dm.hairMat.emissiveIntensity = d * 0.25;
     dm.scleraMat.color.lerpColors(C.sclera, C.scleraDemon, clamp((d - 0.5) * 2, 0, 1));
     dm.irisMat.color.lerpColors(C.iris, C.irisDemon, d);
-    dm.irisMat.emissiveIntensity = lerp(0, 1.4, d);
     dm.trimMat.emissiveIntensity = d * (0.6 + 0.4 * glow);
   }
 

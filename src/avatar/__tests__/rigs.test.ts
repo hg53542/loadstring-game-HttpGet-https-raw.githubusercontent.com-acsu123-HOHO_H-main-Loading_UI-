@@ -83,7 +83,9 @@ describe('ProceduralRig (modelo provisório)', () => {
     rig.apply(pose, 0);
     expect(rig.model.demon.horns[0]!.scale.x).toBeCloseTo(1);
     expect(rig.model.demon.aura.visible).toBe(true);
-    expect(rig.model.demon.irisMat.emissiveIntensity).toBeGreaterThan(1);
+    const iris = rig.model.demon.irisMat.color;
+    expect(iris.r).toBeGreaterThan(0.9); // olhos ficam vermelhos
+    expect(iris.g).toBeLessThan(0.2);
   });
 
   it('roda 10 s de animação completa sem NaN', () => {
