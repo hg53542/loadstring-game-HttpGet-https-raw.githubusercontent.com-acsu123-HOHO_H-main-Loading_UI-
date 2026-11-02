@@ -150,7 +150,7 @@ describe('VrmRig (adaptador para o modelo final)', () => {
 describe('Gestos no modelo provisório (posição das mãos no pico)', () => {
   function handsAtPeak(gesture: 'wave' | 'think' | 'celebrate' | 'point') {
     const rig = new ProceduralRig();
-    const ctrl = new AnimationController({ seed: 1, settings: { breathingIntensity: 0, headMotion: 0, autoBlink: false } });
+    const ctrl = new AnimationController({ seed: 1, settings: { breathingIntensity: 0, headMotion: 0, idleMotion: 0, autoBlink: false } });
     ctrl.playGesture(gesture);
     const frames = Math.round(GESTURE_DEFS[gesture].duration * 60 * 0.5);
     for (let i = 0; i < frames; i++) rig.apply(ctrl.update(1 / 60), 1 / 60);

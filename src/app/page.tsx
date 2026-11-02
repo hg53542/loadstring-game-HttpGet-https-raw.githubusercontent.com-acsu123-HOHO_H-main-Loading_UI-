@@ -3,7 +3,8 @@ import Link from 'next/link';
 const ETAPAS: [string, string][] = [
   ['1. Base + avatar 3D', '✅ Entregue: avatar provisório, respiração, piscadas, cabeça, emoções, gestos, transformação, painel'],
   ['1.5 Momentos cinematográficos', '✅ Entregue: efeitos de anime ao vivo, clipes de IA com fila, regras de reação, simulador'],
-  ['2. Voz + sincronização labial', '⏳ Próxima etapa'],
+  ['1.6 Visual anime 2.5D', '✅ Entregue: personagem 2.5D original, física de cabelo/roupa, 10 emoções, fala com boca sincronizada (voz do sistema)'],
+  ['2. Voz + sincronização labial', '⏳ Próxima etapa (voz brasileira dedicada)'],
   ['3. IA conversacional + memória', '⏳ Planejada'],
   ['4. TikTok LIVE', '⏳ Planejada'],
   ['5. OBS (cenas verticais)', '⏳ Planejada'],
@@ -18,7 +19,7 @@ export default function Home() {
       <h1>
         ZYNOX LIVE IA — <span>LEVI 3D</span>
       </h1>
-      <p style={{ color: 'var(--muted)' }}>Apresentador virtual 3D para lives. Versão 0.2 — base + momentos cinematográficos.</p>
+      <p style={{ color: 'var(--muted)' }}>Apresentador virtual 3D para lives. Versão 0.3 — Levi anime 2.5D.</p>
       <div className="cards">
         <Link className="card" href="/admin">
           <b>Painel de controle →</b>

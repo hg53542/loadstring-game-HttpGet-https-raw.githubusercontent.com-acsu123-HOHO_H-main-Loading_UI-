@@ -7,6 +7,7 @@ import { createBroadcastBus, type ControlBus } from '@/core/control/bus';
 import { applyAnimationCommand, type ControlCommand } from '@/core/control/commands';
 import { FxTimeline } from '@/core/fx/effects';
 import { describeEvent, reactTo, type LiveEvent } from '@/core/reactions/rules';
+import { Speaker } from '@/voice/Speaker';
 import { useCinematicStore } from './cinematicStore';
 import { useSceneStore } from './sceneStore';
 
@@ -27,8 +28,16 @@ const ENQUEUE_MSG: Record<EnqueueResult, string> = {
  * de clipes, e liga tudo ao barramento de comandos.
  * `dispatch` aplica o comando localmente E o transmite para outras abas (ex.: /viewer).
  */
-export function useLeviRuntime() {
+export function useLeviRuntime(opts: { voiceAudio?: boolean } = {}) {
   const [controller] = useState(() => new AnimationController());
+  const [speech, setSpeech] = useState({ speaking: false, text: '' });
+  const speakerRef = useRef<Speaker | null>(null);
+  const voiceAudio = opts.voiceAudio ?? true;
+  useEffect(() => {
+    const sp = new Speaker(controller, { withAudio: voiceAudio, onState: setSpeech });
+    speakerRef.current = sp;
+    return () => sp.stop();
+  }, [controller, voiceAudio]);
   const [fx] = useState(() => new FxTimeline());
   const [clips] = useState(() => new ClipQueue());
   const busRef = useRef<ControlBus | null>(null);
@@ -53,6 +62,12 @@ export function useLeviRuntime() {
           return scene.setCamera(cmd.preset);
         case 'lighting':
           return scene.setLighting(cmd.preset);
+        case 'avatar':
+          return scene.setAvatarMode(cmd.mode);
+        case 'speak':
+          return speakerRef.current?.say(cmd.text);
+        case 'speakStop':
+          return speakerRef.current?.stop();
         case 'fx':
           return fx.trigger(cmd.effect, now(), cmd.intensity ?? 1);
         case 'fxPreset':
@@ -129,5 +144,5 @@ export function useLeviRuntime() {
     [dispatch],
   );
 
-  return { controller, fx, dispatch, onClipEnded, handleEvent };
+  return { controller, fx, dispatch, onClipEnded, handleEvent, speech };
 }

@@ -35,7 +35,11 @@ export const HUMAN_BONES = [
 ] as const;
 export type HumanBone = (typeof HUMAN_BONES)[number];
 
-/** Nomes de expressões no padrão VRM 1.0 (presets). */
+/**
+ * Expressões: presets do VRM 1.0 + 3 expressões customizadas do Levi
+ * (`smirk` = sorriso de canto, `focus` = olhar concentrado, `browUp` = ênfase com
+ * sobrancelhas). Modelos que não tiverem as customizadas simplesmente as ignoram.
+ */
 export const EXPRESSIONS = [
   'blink',
   'blinkLeft',
@@ -50,6 +54,9 @@ export const EXPRESSIONS = [
   'ou',
   'ee',
   'oh',
+  'smirk',
+  'focus',
+  'browUp',
 ] as const;
 export type ExpressionName = (typeof EXPRESSIONS)[number];
 
@@ -72,7 +79,18 @@ export interface Pose {
   breath: number;
 }
 
-export const EMOTIONS = ['neutral', 'happy', 'angry', 'sad', 'surprised', 'relaxed'] as const;
+export const EMOTIONS = [
+  'neutral',
+  'happy',
+  'angry',
+  'sad',
+  'surprised',
+  'relaxed',
+  'confident',
+  'teasing',
+  'focused',
+  'laughing',
+] as const;
 export type Emotion = (typeof EMOTIONS)[number];
 
 export const GESTURES = ['wave', 'nod', 'shake', 'laugh', 'celebrate', 'think', 'point', 'shrug'] as const;
@@ -90,6 +108,8 @@ export interface AnimationSettings {
   autoBlink: boolean;
   /** Multiplicador dos movimentos ociosos de cabeça (0 desliga). */
   headMotion: number;
+  /** Multiplicador das variações de postura em silêncio (0 desliga). */
+  idleMotion: number;
   /** 'idle' = olhar vagueia naturalmente; 'camera' = olha para a câmera. */
   lookMode: LookMode;
   /** Velocidade de transição entre emoções (1/s). */
@@ -101,6 +121,7 @@ export const DEFAULT_SETTINGS: AnimationSettings = {
   breathingRate: 14,
   autoBlink: true,
   headMotion: 1,
+  idleMotion: 1,
   lookMode: 'idle',
   emotionSpeed: 4,
 };

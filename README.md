@@ -3,7 +3,7 @@
 Apresentador virtual 3D para lives: um personagem inspirado na estética de príncipe
 demoníaco de anime, que respira, pisca, olha, gesticula, muda de emoção e se transforma.
 
-> **Versão 0.2 — Etapa 1 (base) + Momentos cinematográficos (modelo híbrido).**
+> **Versão 0.3 — Levi anime 2.5D + momentos cinematográficos.**
 > O personagem atual é um **modelo provisório** gerado em código. Ele NÃO é o
 > personagem final — a interface mostra o selo "MODELO PROVISÓRIO" o tempo todo.
 
@@ -14,6 +14,17 @@ demoníaco de anime, que respira, pisca, olha, gesticula, muda de emoção e se 
 | ![Domínio cósmico](docs/img/efeito-dominio.png) | ![Clipe de teste](docs/img/clipe-teste.png) | |
 
 <sub>Capturas do teste automatizado (renderização por software, sem GPU).</sub>
+
+## Visual: Levi anime 2.5D (padrão desde a v0.3)
+
+![Expressões](docs/img/expressoes-2-5d.png)
+![Provocador, concentrado, rindo, forma demoníaca](docs/img/expressoes-2-5d-b.png)
+![Corpo: aceno na forma demoníaca e gesto de pensar](docs/img/corpo-2-5d.png)
+
+Personagem **original** desenhado em vetor e animado em camadas, no estilo Live2D, com
+cabelo e roupa com física, fala com boca sincronizada em português e 10 emoções. A arte é
+**provisória, feita em código**. O que falta para o visual profissional, e por quê, está em
+**[docs/VISUAL.md](docs/VISUAL.md)**. O modelo 3D/VRM continua disponível pelo painel.
 
 ## O que funciona hoje
 
@@ -68,7 +79,7 @@ Tudo funciona **offline** depois do `npm install` — não há chamadas a APIs e
 ## Como testar
 
 ```powershell
-npm test           # 63 testes automatizados (animação, comandos, modelo, gestos, efeitos, clipes, regras, URL)
+npm test           # 81 testes automatizados (animação, fala, visemas, física, parâmetros Live2D, efeitos, clipes, regras…)
 npm run typecheck  # checagem de tipos TypeScript
 npm run check      # os dois acima
 ```
@@ -145,5 +156,5 @@ docs/                  Arquitetura, avatar, clipes, roadmap, licenças
 scripts/smoke.mjs      Teste no navegador
 ```
 
-Mais detalhes: [Arquitetura](docs/ARQUITETURA.md) · [Avatar e modelo final](docs/AVATAR.md) · [Clipes cinematográficos](docs/CLIPES.md) ·
+Mais detalhes: [Visual 2.5D](docs/VISUAL.md) · [Arquitetura](docs/ARQUITETURA.md) · [Avatar e modelo final](docs/AVATAR.md) · [Clipes cinematográficos](docs/CLIPES.md) ·
 [Roadmap](docs/ROADMAP.md) · [Licenças](docs/LICENCAS.md)

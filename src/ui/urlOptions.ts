@@ -7,6 +7,7 @@ export interface UrlOptions {
   lighting: LightingPreset | null;
   vrm: string | null;
   hideBadge: boolean;
+  avatar: '25d' | '3d' | null;
 }
 
 const QUALITIES = ['baixa', 'media', 'alta'] as const;
@@ -26,5 +27,6 @@ export function parseUrlOptions(search: string): UrlOptions {
     // Só caminhos locais do próprio site (evita carregar arquivos de terceiros).
     vrm: vrm && vrm.startsWith('/') && !vrm.startsWith('//') && vrm.endsWith('.vrm') ? vrm : null,
     hideBadge: flag('nobadge'),
+    avatar: p.get('avatar') === '3d' ? '3d' : p.get('avatar') === '25d' ? '25d' : null,
   };
 }

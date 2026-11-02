@@ -7,6 +7,7 @@ import type { FxTimeline } from '@/core/fx/effects';
 import { ClipOverlay } from './fx/ClipOverlay';
 import { CosmicBackdrop } from './fx/CosmicBackdrop';
 import { FxOverlay } from './fx/FxOverlay';
+import { PuppetLayer } from './puppet/PuppetLayer';
 import { useSceneStore } from '@/state/sceneStore';
 import { LeviAvatar } from './LeviAvatar';
 import { CameraRig } from './scene/CameraRig';
@@ -57,6 +58,9 @@ export function AvatarStage({
   onClipEnded,
 }: StageOptions & { controller: AnimationController; fx: FxTimeline; onClipEnded: () => void }) {
   const q = QUALITY[quality];
+  const mode = useSceneStore((s) => s.avatarMode);
+  // Um VRM carregado sempre usa o palco 3D.
+  const puppet = mode === '25d' && !vrmUrl;
   const cam = CAMERA_DEFS.busto;
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
@@ -68,12 +72,13 @@ export function AvatarStage({
         style={{ background: 'transparent' }}
         data-testid="levi-canvas"
       >
-        <Lighting transparent={transparent} shadowMapSize={q.shadow} />
+        <Lighting transparent={transparent} shadowMapSize={q.shadow} showFloor={!puppet} />
         <CameraRig fx={fx} />
         <CosmicBackdrop fx={fx} />
-        <LeviAvatar controller={controller} vrmUrl={vrmUrl} vrmIsFinal={vrmIsFinal} />
-        <FpsMeter />
+        {!puppet && <LeviAvatar controller={controller} vrmUrl={vrmUrl} vrmIsFinal={vrmIsFinal} />}
+        {!puppet && <FpsMeter />}
       </Canvas>
+      {puppet && <PuppetLayer controller={controller} fx={fx} resolution={q.fx2d + 0.25} />}
       <FxOverlay fx={fx} scale={q.fx2d} />
       <ClipOverlay muted={clipsMuted} onEnded={onClipEnded} />
     </div>

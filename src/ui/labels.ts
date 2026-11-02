@@ -7,6 +7,10 @@ export const EMOTION_LABELS: Record<Emotion, string> = {
   sad: '😢 Triste',
   surprised: '😲 Surpreso',
   relaxed: '😌 Relaxado',
+  confident: '😎 Confiante',
+  teasing: '😏 Provocador',
+  focused: '🧐 Concentrado',
+  laughing: '🤣 Rindo',
 };
 
 export const GESTURE_LABELS: Record<GestureName, string> = {

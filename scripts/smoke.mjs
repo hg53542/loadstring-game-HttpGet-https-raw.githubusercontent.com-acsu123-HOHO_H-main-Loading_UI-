@@ -45,7 +45,32 @@ async function openPage(path, viewport) {
 // ---------- /admin ----------
 const admin = await openPage('/admin', { width: 1366, height: 768 });
 check(await admin.locator('[data-testid="levi-canvas"] canvas').count() === 1, 'admin: canvas 3D presente');
-check(await admin.getByText('MODELO PROVISÓRIO').count() > 0, 'admin: aviso de modelo provisório visível');
+check(await admin.getByText('DEMO 2.5D — ARTE PROVISÓRIA').count() > 0, 'admin: selo de arte provisória 2.5D visível');
+check((await admin.getByTestId('levi-25d').count()) === 1, 'admin: personagem 2.5D é o visual padrão');
+const puppetInk = await admin.getByTestId('levi-25d').evaluate((c) => {
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  let n = 0;
+  for (let i = 3; i < d.length; i += 4) if (d[i] > 200) n++;
+  return n / (d.length / 4);
+});
+check(puppetInk > 0.15, `admin: personagem desenhado (${(puppetInk * 100).toFixed(0)}% da prévia)`);
+const drawMs = await admin.evaluate(() => window.__leviDrawMs ?? -1);
+check(drawMs > 0 && drawMs < 16, `desempenho: desenho do 2.5D leva ${drawMs.toFixed(2)} ms/quadro (CPU, sem GPU)`);
+
+// Fala: boca abre e status mostra o texto
+await admin.getByTestId('speak-text').fill('[feliz] Fala galera, bem-vindos!');
+await admin.getByTestId('speak-go').click();
+await admin.waitForTimeout(700);
+check((await admin.getByTestId('speak-status').innerText()).includes('Falando'), 'fala: status mostra que o Levi está falando');
+await admin.screenshot({ path: `${OUT}/admin-falando.png` });
+await admin.waitForTimeout(3500);
+check((await admin.getByTestId('speak-status').innerText()).includes('silêncio'), 'fala: termina e volta ao silêncio');
+await admin.getByTestId('mode-3d').click();
+await admin.waitForTimeout(1500);
+check((await admin.getByTestId('levi-25d').count()) === 0 && (await admin.getByText('MODELO PROVISÓRIO').count()) > 0, 'modo 3D: troca para o modelo 3D provisório');
+await admin.getByTestId('mode-25d').click();
+await admin.waitForTimeout(800);
+check((await admin.getByTestId('levi-25d').count()) === 1, 'modo 2.5D: volta ao personagem anime');
 await admin.screenshot({ path: `${OUT}/admin-inicial.png` });
 
 const fpsText = await admin.locator('.preview-hud').innerText();

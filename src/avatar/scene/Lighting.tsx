@@ -17,7 +17,7 @@ function dampColor(c: THREE.Color, hex: string, k: number, dt: number) {
 }
 
 /** Três pontos de luz (key/fill/rim) + ambiente, com transição suave entre presets. */
-export function Lighting({ transparent, shadowMapSize = 1024 }: { transparent: boolean; shadowMapSize?: number }) {
+export function Lighting({ transparent, shadowMapSize = 1024, showFloor = true }: { transparent: boolean; shadowMapSize?: number; showFloor?: boolean }) {
   const preset = useSceneStore((s) => s.lighting);
   const scene = useThree((s) => s.scene);
   const hemi = useRef<THREE.HemisphereLight>(null);
@@ -86,7 +86,7 @@ export function Lighting({ transparent, shadowMapSize = 1024 }: { transparent: b
       />
       <directionalLight ref={fill} position={s.fill.position} intensity={s.fill.intensity} color={s.fill.color} />
       <directionalLight ref={rim} position={s.rim.position} intensity={s.rim.intensity} color={s.rim.color} />
-      {!transparent && (
+      {!transparent && showFloor && (
         <group>
           <mesh rotation-x={-Math.PI / 2} receiveShadow>
             <circleGeometry args={[1.4, 64]} />

@@ -30,7 +30,12 @@ export type ControlCommand =
   | { type: 'fx'; effect: FxEffect; intensity?: number }
   | { type: 'fxPreset'; preset: FxPreset; intensity?: number }
   | { type: 'clip'; action: 'play'; id: string }
-  | { type: 'clip'; action: 'skip' | 'clear' };
+  | { type: 'clip'; action: 'skip' | 'clear' }
+  | { type: 'avatar'; mode: '25d' | '3d' }
+  | { type: 'speak'; text: string }
+  | { type: 'speakStop' };
+
+export const MAX_SPEAK_CHARS = 600;
 
 const CLIP_ID_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
@@ -61,6 +66,7 @@ export function parseCommand(raw: unknown): ControlCommand | null {
       if (isNum(p.breathingRate)) patch.breathingRate = p.breathingRate;
       if (typeof p.autoBlink === 'boolean') patch.autoBlink = p.autoBlink;
       if (isNum(p.headMotion)) patch.headMotion = p.headMotion;
+      if (isNum(p.idleMotion)) patch.idleMotion = p.idleMotion;
       if (oneOf(LOOK_MODES, p.lookMode)) patch.lookMode = p.lookMode;
       if (isNum(p.emotionSpeed)) patch.emotionSpeed = p.emotionSpeed;
       return Object.keys(patch).length ? { type: 'settings', patch } : null;
@@ -77,6 +83,14 @@ export function parseCommand(raw: unknown): ControlCommand | null {
       if (!oneOf(FX_PRESETS, raw.preset)) return null;
       if (raw.intensity !== undefined && !isNum(raw.intensity)) return null;
       return { type: 'fxPreset', preset: raw.preset, intensity: raw.intensity as number | undefined };
+    case 'speak':
+      return typeof raw.text === 'string' && raw.text.trim() && raw.text.length <= MAX_SPEAK_CHARS
+        ? { type: 'speak', text: raw.text }
+        : null;
+    case 'speakStop':
+      return { type: 'speakStop' };
+    case 'avatar':
+      return raw.mode === '25d' || raw.mode === '3d' ? { type: 'avatar', mode: raw.mode } : null;
     case 'clip':
       if (raw.action === 'play') {
         return typeof raw.id === 'string' && CLIP_ID_RE.test(raw.id) ? { type: 'clip', action: 'play', id: raw.id } : null;

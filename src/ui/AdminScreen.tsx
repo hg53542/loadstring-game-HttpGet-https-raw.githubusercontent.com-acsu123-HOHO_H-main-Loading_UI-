@@ -9,6 +9,7 @@ import { CAMERA_PRESETS, LIGHTING_PRESETS, type CameraPreset, type ControlComman
 import { useSceneStore } from '@/state/sceneStore';
 import { useLeviRuntime } from '@/state/useLeviRuntime';
 import { CinematicPanel } from './CinematicPanel';
+import { SpeechPanel } from './SpeechPanel';
 import { EMOTION_LABELS, GESTURE_LABELS } from './labels';
 import { StageBadge } from './StageBadge';
 import { parseUrlOptions } from './urlOptions';
@@ -35,7 +36,7 @@ const SHORTCUTS: Record<string, ControlCommand> = {
 };
 
 export default function AdminScreen() {
-  const { controller, fx, dispatch, onClipEnded, handleEvent } = useLeviRuntime();
+  const { controller, fx, dispatch, onClipEnded, handleEvent, speech } = useLeviRuntime();
   const [state, setState] = useState<AnimationState>(() => controller.getState());
   const [quality] = useState(() => parseUrlOptions(window.location.search).quality);
   const [vrmUrl, setVrmUrl] = useState<string | null>(null);
@@ -71,6 +72,7 @@ export default function AdminScreen() {
     if (blobRef.current) URL.revokeObjectURL(blobRef.current);
     blobRef.current = URL.createObjectURL(file);
     setVrmUrl(blobRef.current);
+    dispatch({ type: 'avatar', mode: '3d' });
   };
 
   const s = state.settings;
@@ -85,6 +87,8 @@ export default function AdminScreen() {
       </div>
 
       <div className="controls">
+        <SpeechPanel dispatch={dispatch} speech={speech} />
+
         <section className="section">
           <h2>Status</h2>
           <dl className="stat">
@@ -204,6 +208,11 @@ export default function AdminScreen() {
             <label htmlFor="head">Mov. de cabeça</label>
             <input id="head" type="range" min={0} max={3} step={0.1} value={s.headMotion} onChange={(ev) => settings({ headMotion: +ev.target.value })} />
             <output>{s.headMotion.toFixed(1)}×</output>
+          </div>
+          <div className="field">
+            <label htmlFor="idle">Vida em silêncio</label>
+            <input id="idle" type="range" min={0} max={3} step={0.1} value={s.idleMotion} onChange={(ev) => settings({ idleMotion: +ev.target.value })} />
+            <output>{s.idleMotion.toFixed(1)}×</output>
           </div>
           <div className="row" style={{ marginTop: 8 }}>
             <button className={`btn ${s.lookMode === 'idle' ? 'active' : ''}`} onClick={() => settings({ lookMode: 'idle' })}>

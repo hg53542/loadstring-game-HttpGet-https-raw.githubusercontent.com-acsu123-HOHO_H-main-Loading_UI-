@@ -23,6 +23,13 @@ clipes pré-gerados disparados por eventos + efeitos de anime em tempo real. Ver
 **Pendências:** clipes oficiais do Levi (dependem da imagem oficial do personagem);
 fila única no viewer (etapa 5); regras editáveis no painel (etapa 9).
 
+## ✅ Etapa 1.6 — Reformulação visual: anime 2.5D (v0.3)
+
+Personagem 2.5D original em vetor guiado pelos parâmetros padrão Live2D, com física,
+vida em silêncio, fala com visemas pt-BR (voz do sistema) e emoções de personalidade.
+Ver `docs/VISUAL.md`. **Pendências:** modelo Live2D profissional (arte + rigging),
+medir FPS no notebook e no OBS.
+
 ## ⏭️ Etapa 2 — Voz e sincronização labial
 
 - TTS offline em pt-BR com voz masculina jovem (avaliar motores locais gratuitos; verificar

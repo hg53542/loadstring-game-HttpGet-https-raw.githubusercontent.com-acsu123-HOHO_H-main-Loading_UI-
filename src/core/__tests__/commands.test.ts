@@ -85,3 +85,17 @@ describe('parseCommand — efeitos e clipes', () => {
     }
   });
 });
+
+describe('parseCommand — fala e modo de avatar', () => {
+  it('aceita fala válida e troca de modo', () => {
+    expect(parseCommand({ type: 'speak', text: '[feliz] Fala, galera!' })).toEqual({ type: 'speak', text: '[feliz] Fala, galera!' });
+    expect(parseCommand({ type: 'speakStop' })).toEqual({ type: 'speakStop' });
+    expect(parseCommand({ type: 'avatar', mode: '25d' })).toEqual({ type: 'avatar', mode: '25d' });
+  });
+  it('rejeita fala vazia, gigante ou não-texto e modos desconhecidos', () => {
+    expect(parseCommand({ type: 'speak', text: '   ' })).toBeNull();
+    expect(parseCommand({ type: 'speak', text: 'a'.repeat(601) })).toBeNull();
+    expect(parseCommand({ type: 'speak', text: 42 })).toBeNull();
+    expect(parseCommand({ type: 'avatar', mode: '4d' })).toBeNull();
+  });
+});

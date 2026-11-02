@@ -4,6 +4,8 @@ import { DemonLayer } from './layers/demon';
 import { EmotionLayer } from './layers/emotions';
 import { GestureLayer } from './layers/gestures';
 import { HeadMotionLayer } from './layers/headMotion';
+import { IdleLayer } from './layers/idle';
+import { TalkLayer, type Visemes } from './layers/talk';
 import { clamp, clamp01, createRestPose, createRng } from './math';
 import {
   DEFAULT_SETTINGS,
@@ -22,6 +24,7 @@ export interface AnimationState {
   demon: number;
   demonTarget: number;
   blinkCount: number;
+  speaking: boolean;
   settings: AnimationSettings;
 }
 
@@ -41,6 +44,8 @@ export class AnimationController {
   readonly emotion = new EmotionLayer();
   readonly gestures = new GestureLayer();
   readonly demon = new DemonLayer();
+  readonly idle: IdleLayer;
+  readonly talk: TalkLayer;
   time = 0;
   private pose: Pose = createRestPose();
 
@@ -48,6 +53,8 @@ export class AnimationController {
     const rng = createRng(opts.seed ?? Date.now());
     this.blink = new BlinkLayer(rng);
     this.head = new HeadMotionLayer(rng);
+    this.idle = new IdleLayer(rng);
+    this.talk = new TalkLayer(rng);
     this.settings = sanitizeSettings({ ...DEFAULT_SETTINGS, ...opts.settings });
   }
 
@@ -62,12 +69,17 @@ export class AnimationController {
     this.emotion.update(d, s);
     this.gestures.update(d);
     this.demon.update(d);
+    this.idle.update(d);
+    this.talk.update(d);
 
     const pose = createRestPose();
     this.breathing.apply(pose, s);
     this.emotion.apply(pose);
     this.demon.apply(pose);
+    // Postura ociosa some durante gestos grandes.
+    this.idle.apply(pose, s.idleMotion * (this.gestures.active ? 0.3 : 1));
     this.head.apply(pose, s);
+    this.talk.apply(pose);
     this.gestures.apply(pose);
     this.blink.apply(pose);
 
@@ -91,6 +103,11 @@ export class AnimationController {
     this.gestures.play(name);
   }
 
+  /** Visemas da fala atual (vindos do módulo de voz). */
+  setVisemes(v: Visemes) {
+    this.talk.setVisemes(v);
+  }
+
   triggerBlink() {
     this.blink.trigger();
   }
@@ -111,6 +128,7 @@ export class AnimationController {
       demon: this.demon.value,
       demonTarget: this.demon.target,
       blinkCount: this.blink.count,
+      speaking: this.talk.speaking,
       settings: { ...this.settings },
     };
   }
@@ -124,6 +142,7 @@ export function sanitizeSettings(s: AnimationSettings): AnimationSettings {
     breathingRate: num(s.breathingRate, DEFAULT_SETTINGS.breathingRate, 4, 40),
     autoBlink: typeof s.autoBlink === 'boolean' ? s.autoBlink : DEFAULT_SETTINGS.autoBlink,
     headMotion: num(s.headMotion, DEFAULT_SETTINGS.headMotion, 0, 3),
+    idleMotion: num(s.idleMotion, DEFAULT_SETTINGS.idleMotion, 0, 3),
     lookMode: (LOOK_MODES as readonly string[]).includes(s.lookMode) ? s.lookMode : DEFAULT_SETTINGS.lookMode,
     emotionSpeed: num(s.emotionSpeed, DEFAULT_SETTINGS.emotionSpeed, 0.5, 20),
   };

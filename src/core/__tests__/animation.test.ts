@@ -35,7 +35,7 @@ describe('AnimationController — respiração', () => {
   });
 
   it('intensidade 0 desliga a respiração', () => {
-    const ctrl = new AnimationController({ seed: 1, settings: { breathingIntensity: 0, headMotion: 0 } });
+    const ctrl = new AnimationController({ seed: 1, settings: { breathingIntensity: 0, headMotion: 0, idleMotion: 0 } });
     const rest = createRestPose();
     for (const p of run(ctrl, 3)) {
       expect(p.breath).toBe(0);
@@ -120,7 +120,7 @@ describe('AnimationController — emoções', () => {
 
 describe('AnimationController — gestos', () => {
   it.each(GESTURES)('gesto "%s" altera a pose e termina sozinho', (g) => {
-    const ctrl = new AnimationController({ seed: 1, settings: { breathingIntensity: 0, headMotion: 0, autoBlink: false } });
+    const ctrl = new AnimationController({ seed: 1, settings: { breathingIntensity: 0, headMotion: 0, idleMotion: 0, autoBlink: false } });
     const before = structuredClone(ctrl.update(DT));
     ctrl.playGesture(g);
     const poses = run(ctrl, GESTURE_DEFS[g].duration + 0.2);
