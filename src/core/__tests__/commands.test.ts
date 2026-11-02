@@ -63,3 +63,25 @@ describe('applyAnimationCommand', () => {
     expect(applyAnimationCommand(ctrl, { type: 'lighting', preset: 'estudio' })).toBe(false);
   });
 });
+
+describe('parseCommand — efeitos e clipes', () => {
+  it('aceita fx, presets e clipes válidos', () => {
+    expect(parseCommand({ type: 'fx', effect: 'lightning', intensity: 0.5 })).toEqual({ type: 'fx', effect: 'lightning', intensity: 0.5 });
+    expect(parseCommand({ type: 'fxPreset', preset: 'dominio' })).toEqual({ type: 'fxPreset', preset: 'dominio', intensity: undefined });
+    expect(parseCommand({ type: 'clip', action: 'play', id: 'presente-grande' })).toEqual({ type: 'clip', action: 'play', id: 'presente-grande' });
+    expect(parseCommand({ type: 'clip', action: 'skip' })).toEqual({ type: 'clip', action: 'skip' });
+  });
+
+  it('rejeita efeitos desconhecidos e ids de clipe perigosos', () => {
+    for (const raw of [
+      { type: 'fx', effect: 'nuke' },
+      { type: 'fxPreset', preset: 'apocalipse' },
+      { type: 'clip', action: 'play', id: '../../etc/passwd' },
+      { type: 'clip', action: 'play', id: 'Clip Com Espaço' },
+      { type: 'clip', action: 'play' },
+      { type: 'clip', action: 'delete' },
+    ]) {
+      expect(parseCommand(raw)).toBeNull();
+    }
+  });
+});

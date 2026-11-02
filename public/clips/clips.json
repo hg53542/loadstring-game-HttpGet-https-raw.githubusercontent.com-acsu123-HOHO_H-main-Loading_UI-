@@ -1,0 +1,7 @@
+{
+  "clips": [
+    { "id": "entrada", "title": "Entrada do Levi (TESTE)", "src": "/clips/teste/entrada.webm", "priority": "normal", "cooldown": 20, "isPlaceholder": true, "introFx": "impacto" },
+    { "id": "presente-grande", "title": "Presente grande (TESTE)", "src": "/clips/teste/presente-grande.webm", "priority": "normal", "cooldown": 15, "isPlaceholder": true, "introFx": "explosao" },
+    { "id": "presente-lendario", "title": "Presente lendário (TESTE)", "src": "/clips/teste/presente-lendario.webm", "priority": "alta", "cooldown": 30, "isPlaceholder": true, "introFx": "dominio" }
+  ]
+}

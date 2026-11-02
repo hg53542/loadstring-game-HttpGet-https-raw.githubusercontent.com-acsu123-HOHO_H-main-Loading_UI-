@@ -44,7 +44,7 @@ async function openPage(path, viewport) {
 
 // ---------- /admin ----------
 const admin = await openPage('/admin', { width: 1366, height: 768 });
-check(await admin.locator('canvas').count() === 1, 'admin: canvas 3D presente');
+check(await admin.locator('[data-testid="levi-canvas"] canvas').count() === 1, 'admin: canvas 3D presente');
 check(await admin.getByText('MODELO PROVISÓRIO').count() > 0, 'admin: aviso de modelo provisório visível');
 await admin.screenshot({ path: `${OUT}/admin-inicial.png` });
 
@@ -81,6 +81,48 @@ await admin.getByRole('button', { name: 'Corpo inteiro' }).click();
 await admin.getByTestId('gesture-celebrate').click();
 await admin.waitForTimeout(1400);
 await viewer.screenshot({ path: `${OUT}/viewer-corpo-comemorando.png` });
+
+// ---------- Momentos cinematográficos ----------
+const fxPixels = (page) =>
+  page.getByTestId('fx-overlay').evaluate((c) => {
+    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let n = 0;
+    for (let i = 3; i < d.length; i += 4) if (d[i] > 20) n++;
+    return n / (d.length / 4);
+  });
+await admin.getByRole('button', { name: 'Busto' }).click();
+await admin.getByTestId('fxpreset-poder').click();
+await admin.waitForTimeout(700);
+const cover = await fxPixels(admin);
+check(cover > 0.01, `efeitos: camada 2D desenhando (${(cover * 100).toFixed(1)}% da tela)`);
+await admin.screenshot({ path: `${OUT}/fx-poder.png` });
+await viewer.screenshot({ path: `${OUT}/viewer-fx-poder.png` });
+
+await admin.waitForTimeout(2500);
+await admin.getByTestId('fxpreset-dominio').click();
+await admin.waitForTimeout(2200);
+await viewer.screenshot({ path: `${OUT}/viewer-dominio-cosmico.png` });
+
+await admin.waitForTimeout(5000);
+await admin.getByRole('button', { name: /🐉 Presente lendário/ }).click();
+await admin.waitForTimeout(400);
+check((await admin.getByTestId('clip-current').innerText()).includes('Presente lendário'), 'clipes: presente lendário simulado disparou o clipe');
+check((await admin.getByTestId('event-log').innerText()).includes('[SIMULADO]'), 'eventos: log marca evento como [SIMULADO]');
+await viewer.waitForTimeout(1200);
+const vclip = viewer.getByTestId('clip-overlay');
+check((await vclip.getAttribute('data-clip')) === 'presente-lendario', 'viewer: recebeu o mesmo clipe pelo barramento');
+check((await vclip.getAttribute('data-visible')) === '1', 'viewer: vídeo do clipe está visível e tocando');
+const playing = await vclip.evaluate((v) => !v.paused && v.currentTime > 0);
+check(playing, 'viewer: vídeo avançando (não travado)');
+await viewer.screenshot({ path: `${OUT}/viewer-clipe.png` });
+await viewer.waitForTimeout(4500);
+check((await vclip.getAttribute('data-clip')) === '', 'viewer: ao fim do clipe volta ao avatar 3D');
+check((await admin.getByTestId('clip-current').innerText()).includes('avatar 3D'), 'admin: fila de clipes vazia após o fim');
+
+// Clipe inexistente não pode travar nada
+await admin.evaluate(() => new BroadcastChannel('levi3d-control').postMessage({ type: 'clip', action: 'play', id: 'nao-existe' }));
+await admin.waitForTimeout(300);
+check((await viewer.getByTestId('clip-overlay').getAttribute('data-clip')) === '', 'viewer: clipe inexistente é ignorado sem travar');
 
 // Modo transparente para OBS
 const obs = await openPage('/viewer?transparent=1&nobadge=1&camera=busto', { width: 540, height: 960 });

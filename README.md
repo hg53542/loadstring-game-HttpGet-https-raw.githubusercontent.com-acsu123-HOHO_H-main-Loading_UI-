@@ -3,13 +3,15 @@
 Apresentador virtual 3D para lives: um personagem inspirado na estética de príncipe
 demoníaco de anime, que respira, pisca, olha, gesticula, muda de emoção e se transforma.
 
-> **Versão 0.1 — Etapa 1 (base do projeto).**
+> **Versão 0.2 — Etapa 1 (base) + Momentos cinematográficos (modelo híbrido).**
 > O personagem atual é um **modelo provisório** gerado em código. Ele NÃO é o
 > personagem final — a interface mostra o selo "MODELO PROVISÓRIO" o tempo todo.
 
 | Painel | Forma demoníaca | Corpo inteiro |
 |---|---|---|
 | ![Painel](docs/img/painel.png) | ![Demônio](docs/img/forma-demoniaca.png) | ![Comemorando](docs/img/corpo-comemorando.png) |
+| **Domínio cósmico + raios** | **Clipe entrando por cima do 3D** | |
+| ![Domínio cósmico](docs/img/efeito-dominio.png) | ![Clipe de teste](docs/img/clipe-teste.png) | |
 
 <sub>Capturas do teste automatizado (renderização por software, sem GPU).</sub>
 
@@ -27,6 +29,9 @@ demoníaco de anime, que respira, pisca, olha, gesticula, muda de emoção e se 
 | Página de visualização `/viewer` (vertical, fundo transparente p/ OBS) | ✅ |
 | Painel `/admin` para testar tudo + atalhos de teclado | ✅ |
 | Painel controla o viewer em outra aba do mesmo navegador | ✅ |
+| **Efeitos de anime ao vivo**: linhas de velocidade, raios, vidro estilhaçado, fundo cósmico, flash, tremor | ✅ |
+| **Clipes cinematográficos** (vídeos de IA pré-gerados) com fila, prioridade e transição 3D ↔ clipe | ✅ com clipes de TESTE |
+| Regras de reação (presentes por faixa, seguidor, curtidas) + simulador de eventos | ✅ simulado — eventos reais na etapa 4 |
 | Carregar um arquivo `.vrm` para teste (adaptador pronto) | ⚠️ implementado, testado só com modelo simulado |
 | Voz, sincronização labial, IA, TikTok, OBS, cenários, batalhas, universo | ⏳ próximas etapas ([roadmap](docs/ROADMAP.md)) |
 
@@ -63,7 +68,7 @@ Tudo funciona **offline** depois do `npm install` — não há chamadas a APIs e
 ## Como testar
 
 ```powershell
-npm test           # 43 testes automatizados (animação, comandos, modelo, gestos, URL)
+npm test           # 63 testes automatizados (animação, comandos, modelo, gestos, efeitos, clipes, regras, URL)
 npm run typecheck  # checagem de tipos TypeScript
 npm run check      # os dois acima
 ```
@@ -85,10 +90,14 @@ npm run smoke
 4. Clique em **😈 Transformar** (ou tecla `D`) com a luz **Demoníaco**: chifres crescem, olhos ficam vermelhos.
 5. Troque as câmeras; em **Livre** arraste com o mouse.
 6. Abra `/viewer` em outra aba e use o painel: o viewer repete os comandos.
+7. Em **Efeitos de anime**, clique em **🌌 Domínio cósmico** (ou tecla `9`).
+8. Em **Simular eventos**, clique em **🐉 Presente lendário**: o efeito dispara e o clipe de teste
+   entra por cima do 3D (com som no `/viewer`). Ao terminar, a live volta ao avatar.
 
 ## Atalhos do painel
 
-`1` acenar · `2` concordar · `3` rir · `4` comemorar · `5` pensar · `B` piscar · `D` liga/desliga forma demoníaca
+`1` acenar · `2` concordar · `3` rir · `4` comemorar · `5` pensar · `B` piscar · `D` liga/desliga forma demoníaca ·
+`6` impacto · `7` poder · `8` vidro estilhaçado · `9` domínio cósmico
 
 ## Parâmetros do `/viewer` (e `/admin`)
 
@@ -119,17 +128,22 @@ src/
   core/                Lógica pura (sem React/Three) — testável em Node
     animation/         AnimationController + camadas (respiração, piscada, cabeça, emoções, gestos, demônio)
     control/           Protocolo de comandos validados + barramento entre abas
+    fx/                Linha do tempo dos efeitos de anime
+    clips/             Manifesto e fila de clipes cinematográficos
+    reactions/         Regras evento da live → reação
   avatar/              Renderização 3D
     procedural/        Modelo PROVISÓRIO do Levi feito em código
     rigs/              Adaptadores Pose → modelo (ProceduralRig, VrmRig)
     scene/             Câmera, iluminação, presets
     vrm/               Carregador de arquivos .vrm
+    fx/                Desenho dos efeitos (camada 2D, fundo cósmico) e reprodutor de clipes
   state/               Estado da cena (zustand) e runtime (controlador + comandos)
   ui/                  Telas do painel e do visualizador
   modules/             Módulos futuros (voz, IA, TikTok, OBS, cenários, batalhas, universo, banco)
-docs/                  Arquitetura, avatar, roadmap, licenças
+public/clips/          Clipes + clips.json (os incluídos são de TESTE)
+docs/                  Arquitetura, avatar, clipes, roadmap, licenças
 scripts/smoke.mjs      Teste no navegador
 ```
 
-Mais detalhes: [Arquitetura](docs/ARQUITETURA.md) · [Avatar e modelo final](docs/AVATAR.md) ·
+Mais detalhes: [Arquitetura](docs/ARQUITETURA.md) · [Avatar e modelo final](docs/AVATAR.md) · [Clipes cinematográficos](docs/CLIPES.md) ·
 [Roadmap](docs/ROADMAP.md) · [Licenças](docs/LICENCAS.md)

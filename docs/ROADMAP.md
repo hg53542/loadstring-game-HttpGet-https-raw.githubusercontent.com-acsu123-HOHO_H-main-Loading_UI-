@@ -15,6 +15,14 @@ piscadas, cabeça/olhar, emoções, gestos, transformação demoníaca, câmeras
   vêm de renderização por software e não representam o notebook).
 - Gestos são procedurais; mãos não têm dedos no modelo provisório.
 
+## ✅ Etapa 1.5 — Momentos cinematográficos (modelo híbrido, v0.2)
+
+Pedido a partir do vídeo de referência (clipes de IA de vídeo). Avatar 3D ao vivo +
+clipes pré-gerados disparados por eventos + efeitos de anime em tempo real. Ver `docs/CLIPES.md`.
+
+**Pendências:** clipes oficiais do Levi (dependem da imagem oficial do personagem);
+fila única no viewer (etapa 5); regras editáveis no painel (etapa 9).
+
 ## ⏭️ Etapa 2 — Voz e sincronização labial
 
 - TTS offline em pt-BR com voz masculina jovem (avaliar motores locais gratuitos; verificar

@@ -14,6 +14,8 @@
 | Asset | Autor | Licença |
 |---|---|---|
 | Levi provisório (`src/avatar/procedural/buildLevi.ts`) | gerado em código neste projeto | do projeto |
+| Clipes de teste (`public/clips/teste/*.webm`) | gerados com ffmpeg neste projeto (gradiente + tom senoidal + texto na fonte DejaVu Sans) | do projeto; licença da DejaVu permite esse uso |
+| Nebulosa e estrelas do fundo cósmico | geradas em código (canvas) | do projeto |
 
 Nenhum modelo, textura, som ou fonte de terceiros está incluído.
 

@@ -31,6 +31,13 @@ para um modelo 3D específico. Isso permite:
             └─ comandos de cena (câmera, luz) ─► useSceneStore (zustand) ─► CameraRig / Lighting
 ```
 
+## Momentos cinematográficos
+
+`FxTimeline` (efeitos), `ClipQueue` (clipes) e `reactTo` (regras) também são TypeScript
+puro e testados. Os comandos `fx`, `fxPreset` e `clip` passam pelo mesmo protocolo e pelo
+mesmo barramento. Para desenhar: `FxOverlay` (canvas 2D por cima do 3D), `CosmicBackdrop`
+(esfera 3D) e `ClipOverlay` (`<video>` por cima de tudo). Detalhes em `docs/CLIPES.md`.
+
 ## Camadas de animação (`src/core/animation/layers`)
 
 Aplicadas nesta ordem sobre a pose de descanso, de forma **aditiva**:

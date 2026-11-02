@@ -8,7 +8,9 @@ import { EMOTIONS, GESTURES, type AnimationSettings } from '@/core/animation/typ
 import { CAMERA_PRESETS, LIGHTING_PRESETS, type CameraPreset, type ControlCommand } from '@/core/control/commands';
 import { useSceneStore } from '@/state/sceneStore';
 import { useLeviRuntime } from '@/state/useLeviRuntime';
+import { CinematicPanel } from './CinematicPanel';
 import { EMOTION_LABELS, GESTURE_LABELS } from './labels';
+import { StageBadge } from './StageBadge';
 import { parseUrlOptions } from './urlOptions';
 
 const CAMERA_LABELS: Record<CameraPreset, string> = {
@@ -26,10 +28,14 @@ const SHORTCUTS: Record<string, ControlCommand> = {
   '3': { type: 'gesture', gesture: 'laugh' },
   '4': { type: 'gesture', gesture: 'celebrate' },
   '5': { type: 'gesture', gesture: 'think' },
+  '6': { type: 'fxPreset', preset: 'impacto' },
+  '7': { type: 'fxPreset', preset: 'poder' },
+  '8': { type: 'fxPreset', preset: 'explosao' },
+  '9': { type: 'fxPreset', preset: 'dominio' },
 };
 
 export default function AdminScreen() {
-  const { controller, dispatch } = useLeviRuntime();
+  const { controller, fx, dispatch, onClipEnded, handleEvent } = useLeviRuntime();
   const [state, setState] = useState<AnimationState>(() => controller.getState());
   const [quality] = useState(() => parseUrlOptions(window.location.search).quality);
   const [vrmUrl, setVrmUrl] = useState<string | null>(null);
@@ -74,8 +80,8 @@ export default function AdminScreen() {
     <div className="admin">
       <div className="preview" data-testid="preview">
         <div className="preview-hud">{fps} FPS</div>
-        {rig?.isPlaceholder && <div className="badge-placeholder">MODELO PROVISÓRIO</div>}
-        <AvatarStage controller={controller} vrmUrl={vrmUrl} quality={quality} />
+        <StageBadge />
+        <AvatarStage controller={controller} fx={fx} onClipEnded={onClipEnded} clipsMuted vrmUrl={vrmUrl} quality={quality} />
       </div>
 
       <div className="controls">
@@ -246,6 +252,8 @@ export default function AdminScreen() {
             )}
           </div>
         </section>
+
+        <CinematicPanel dispatch={dispatch} handleEvent={handleEvent} />
 
         <section className="section">
           <h2>Visualizador / OBS</h2>

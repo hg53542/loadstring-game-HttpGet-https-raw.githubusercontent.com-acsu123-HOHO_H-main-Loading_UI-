@@ -1,6 +1,6 @@
 {
   "name": "zynox-live-ia-levi3d",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "ZYNOX LIVE IA — LEVI 3D: apresentador virtual 3D para lives",
   "scripts": {

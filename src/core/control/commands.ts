@@ -7,6 +7,7 @@ import {
   type Emotion,
   type GestureName,
 } from '../animation/types';
+import { FX_EFFECTS, FX_PRESETS, type FxEffect, type FxPreset } from '../fx/effects';
 
 export const CAMERA_PRESETS = ['rosto', 'busto', 'corpo', 'livre'] as const;
 export type CameraPreset = (typeof CAMERA_PRESETS)[number];
@@ -25,7 +26,13 @@ export type ControlCommand =
   | { type: 'demon'; value: number }
   | { type: 'settings'; patch: Partial<AnimationSettings> }
   | { type: 'camera'; preset: CameraPreset }
-  | { type: 'lighting'; preset: LightingPreset };
+  | { type: 'lighting'; preset: LightingPreset }
+  | { type: 'fx'; effect: FxEffect; intensity?: number }
+  | { type: 'fxPreset'; preset: FxPreset; intensity?: number }
+  | { type: 'clip'; action: 'play'; id: string }
+  | { type: 'clip'; action: 'skip' | 'clear' };
+
+const CLIP_ID_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
@@ -62,6 +69,19 @@ export function parseCommand(raw: unknown): ControlCommand | null {
       return oneOf(CAMERA_PRESETS, raw.preset) ? { type: 'camera', preset: raw.preset } : null;
     case 'lighting':
       return oneOf(LIGHTING_PRESETS, raw.preset) ? { type: 'lighting', preset: raw.preset } : null;
+    case 'fx':
+      if (!oneOf(FX_EFFECTS, raw.effect)) return null;
+      if (raw.intensity !== undefined && !isNum(raw.intensity)) return null;
+      return { type: 'fx', effect: raw.effect, intensity: raw.intensity as number | undefined };
+    case 'fxPreset':
+      if (!oneOf(FX_PRESETS, raw.preset)) return null;
+      if (raw.intensity !== undefined && !isNum(raw.intensity)) return null;
+      return { type: 'fxPreset', preset: raw.preset, intensity: raw.intensity as number | undefined };
+    case 'clip':
+      if (raw.action === 'play') {
+        return typeof raw.id === 'string' && CLIP_ID_RE.test(raw.id) ? { type: 'clip', action: 'play', id: raw.id } : null;
+      }
+      return raw.action === 'skip' || raw.action === 'clear' ? { type: 'clip', action: raw.action } : null;
     default:
       return null;
   }
