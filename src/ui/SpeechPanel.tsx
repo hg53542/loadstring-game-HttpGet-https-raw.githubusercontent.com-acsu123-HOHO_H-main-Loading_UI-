@@ -18,6 +18,8 @@ export function SpeechPanel({ dispatch, speech }: { dispatch: (c: ControlCommand
   const [text, setText] = useState(EXAMPLES[0]!);
   const [voiceName, setVoiceName] = useState<string | null>(null);
   const mode = useSceneStore((s) => s.avatarMode);
+  const scene = useSceneStore((s) => s.scene);
+  const outfit = useSceneStore((s) => s.outfit);
 
   useEffect(() => {
     const update = () => setVoiceName(Speaker.pickVoice()?.name ?? null);
@@ -38,6 +40,22 @@ export function SpeechPanel({ dispatch, speech }: { dispatch: (c: ControlCommand
           </button>
           <button data-testid="mode-3d" className={`btn ${mode === '3d' ? 'active' : ''}`} onClick={() => dispatch({ type: 'avatar', mode: '3d' })}>
             🧊 3D / VRM
+          </button>
+        </div>
+        <div className="row" style={{ marginTop: 8 }}>
+          <button data-testid="scene-quarto" className={`btn ${scene === 'quarto' ? 'active' : ''}`} onClick={() => dispatch({ type: 'scene', scene: 'quarto' })}>
+            🎮 Quarto gamer ZYNOX
+          </button>
+          <button data-testid="scene-palco" className={`btn ${scene === 'palco' ? 'active' : ''}`} onClick={() => dispatch({ type: 'scene', scene: 'palco' })}>
+            🎭 Palco
+          </button>
+        </div>
+        <div className="row" style={{ marginTop: 8 }}>
+          <button data-testid="outfit-streamer" className={`btn ${outfit === 'streamer' ? 'active' : ''}`} onClick={() => dispatch({ type: 'outfit', outfit: 'streamer' })}>
+            🧥 Moletom ZYNOX
+          </button>
+          <button data-testid="outfit-guerreiro" className={`btn ${outfit === 'guerreiro' ? 'active' : ''}`} onClick={() => dispatch({ type: 'outfit', outfit: 'guerreiro' })}>
+            ⚔️ Guerreiro
           </button>
         </div>
         <p className="hint">

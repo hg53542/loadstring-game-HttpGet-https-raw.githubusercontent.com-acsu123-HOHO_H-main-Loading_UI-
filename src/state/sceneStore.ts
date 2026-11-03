@@ -9,10 +9,16 @@ export interface RigInfo {
 
 /** '25d' = personagem anime 2.5D (padrão); '3d' = modelo 3D provisório geométrico / VRM. */
 export type AvatarMode = '25d' | '3d';
+export type SceneName = 'quarto' | 'palco';
+export type Outfit = 'streamer' | 'guerreiro';
 
 interface SceneState {
   avatarMode: AvatarMode;
   setAvatarMode: (m: AvatarMode) => void;
+  scene: SceneName;
+  setScene: (s: SceneName) => void;
+  outfit: Outfit;
+  setOutfit: (o: Outfit) => void;
   camera: CameraPreset;
   lighting: LightingPreset;
   rig: RigInfo | null;
@@ -29,6 +35,10 @@ interface SceneState {
 export const useSceneStore = create<SceneState>((set) => ({
   avatarMode: '25d',
   setAvatarMode: (avatarMode) => set({ avatarMode }),
+  scene: 'quarto',
+  setScene: (scene) => set({ scene }),
+  outfit: 'streamer',
+  setOutfit: (outfit) => set({ outfit }),
   camera: 'busto',
   lighting: 'estudio',
   rig: null,

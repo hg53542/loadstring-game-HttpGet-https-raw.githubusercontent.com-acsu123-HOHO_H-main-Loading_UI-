@@ -33,7 +33,9 @@ export type ControlCommand =
   | { type: 'clip'; action: 'skip' | 'clear' }
   | { type: 'avatar'; mode: '25d' | '3d' }
   | { type: 'speak'; text: string }
-  | { type: 'speakStop' };
+  | { type: 'speakStop' }
+  | { type: 'scene'; scene: 'quarto' | 'palco' }
+  | { type: 'outfit'; outfit: 'streamer' | 'guerreiro' };
 
 export const MAX_SPEAK_CHARS = 600;
 
@@ -89,6 +91,10 @@ export function parseCommand(raw: unknown): ControlCommand | null {
         : null;
     case 'speakStop':
       return { type: 'speakStop' };
+    case 'scene':
+      return raw.scene === 'quarto' || raw.scene === 'palco' ? { type: 'scene', scene: raw.scene } : null;
+    case 'outfit':
+      return raw.outfit === 'streamer' || raw.outfit === 'guerreiro' ? { type: 'outfit', outfit: raw.outfit } : null;
     case 'avatar':
       return raw.mode === '25d' || raw.mode === '3d' ? { type: 'avatar', mode: raw.mode } : null;
     case 'clip':

@@ -68,6 +68,10 @@ export function useLeviRuntime(opts: { voiceAudio?: boolean } = {}) {
           return speakerRef.current?.say(cmd.text);
         case 'speakStop':
           return speakerRef.current?.stop();
+        case 'scene':
+          return scene.setScene(cmd.scene);
+        case 'outfit':
+          return scene.setOutfit(cmd.outfit);
         case 'fx':
           return fx.trigger(cmd.effect, now(), cmd.intensity ?? 1);
         case 'fxPreset':

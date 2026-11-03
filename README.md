@@ -17,6 +17,7 @@ demoníaco de anime, que respira, pisca, olha, gesticula, muda de emoção e se 
 
 ## Visual: Levi anime 2.5D (padrão desde a v0.3)
 
+![Quarto gamer ZYNOX com moletom de streamer](docs/img/quarto-gamer.png)
 ![Rosto, busto e corpo](docs/img/levi-2-5d-acabamento.png)
 ![Expressões](docs/img/expressoes-2-5d.png)
 ![Provocador, concentrado, rindo, forma demoníaca](docs/img/expressoes-2-5d-b.png)
@@ -119,6 +120,8 @@ npm run smoke
 | `camera=rosto\|busto\|corpo\|livre` | Enquadramento inicial |
 | `lighting=estudio\|dramatico\|demoniaco` | Iluminação inicial |
 | `quality=baixa\|media\|alta` | Resolução/sombras (baixa = notebooks) |
+| `cenario=quarto\|palco` | Cenário do 2.5D (padrão: quarto gamer ZYNOX) |
+| `roupa=streamer\|guerreiro` | Figurino do 2.5D (padrão: moletom ZYNOX) |
 | `nobadge=1` | Esconde o selo "MODELO PROVISÓRIO" (só para capturas internas) |
 | `vrm=/models/arquivo.vrm` | Usa um VRM de `public/models/` (somente caminhos locais) |
 

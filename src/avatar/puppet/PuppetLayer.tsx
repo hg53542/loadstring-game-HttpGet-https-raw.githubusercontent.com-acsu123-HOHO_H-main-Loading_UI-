@@ -7,6 +7,7 @@ import type { CameraPreset, LightingPreset } from '@/core/control/commands';
 import type { FxTimeline } from '@/core/fx/effects';
 import { poseToLive2D } from '@/core/params/live2dParams';
 import { useSceneStore } from '@/state/sceneStore';
+import { drawDesk, drawGamingChair, drawRoomGlow, renderRoomBackdrop } from './gamerRoom';
 import { Levi25D } from './levi25d';
 
 /** Enquadramentos no espaço de desenho (centro e altura visível). */
@@ -15,6 +16,9 @@ const FRAMING: Record<Exclude<CameraPreset, 'livre'>, { cx: number; cy: number; 
   busto: { cx: 500, cy: 800, h: 1350 },
   corpo: { cx: 500, cy: 1240, h: 2750 },
 };
+
+/** No quarto ele está sentado à mesa: o "corpo inteiro" vira um plano aberto da mesa. */
+const ROOM_FRAMING: typeof FRAMING = { ...FRAMING, corpo: { cx: 500, cy: 980, h: 1900 } };
 
 /** Palco: cor do holofote, da luz de contorno e da sombra no chão por iluminação. */
 const STAGE: Record<LightingPreset, { spot: string; rim: string; floor: string }> = {
@@ -59,6 +63,7 @@ export function PuppetLayer({
     const rimCanvas = document.createElement('canvas');
     const cctx = charCanvas.getContext('2d')!;
     const rctx = rimCanvas.getContext('2d')!;
+    let backdrop: HTMLCanvasElement | null = null;
     let raf = 0;
     let last = performance.now();
     let frames = 0;
@@ -71,6 +76,7 @@ export function PuppetLayer({
       canvas.height = Math.max(1, Math.round(canvas.clientHeight * dpr));
       charCanvas.width = rimCanvas.width = canvas.width;
       charCanvas.height = rimCanvas.height = canvas.height;
+      backdrop = null; // refaz o fundo do quarto no novo tamanho
     };
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
@@ -87,8 +93,9 @@ export function PuppetLayer({
         frames = 0;
         acc = 0;
       }
-      const { camera, lighting } = useSceneStore.getState();
-      const target = FRAMING[camera === 'livre' ? 'busto' : camera];
+      const { camera, lighting, scene, outfit } = useSceneStore.getState();
+      const room = scene === 'quarto';
+      const target = (room ? ROOM_FRAMING : FRAMING)[camera === 'livre' ? 'busto' : camera];
       view = { cx: damp(view.cx, target.cx, 4, dt), cy: damp(view.cy, target.cy, 4, dt), h: damp(view.h, target.h, 4, dt) };
 
       const pose = controller.update(dt);
@@ -118,7 +125,9 @@ export function PuppetLayer({
       cctx.setTransform(scale, 0, 0, scale, tx, ty);
       // Contorno mais fino em zoom (para não ficar grosseiro no close).
       const line = 5 / Math.pow(scale, 0.35);
-      levi.draw(cctx, { pose, params, dt, time: now / 1000, hand }, { line, light: [-7, -10] });
+      const st = { line, light: [-7, -10] as [number, number] };
+      if (room && !transparent) drawGamingChair(cctx, st, now / 1000);
+      levi.draw(cctx, { pose, params, dt, time: now / 1000, hand, outfit }, st);
 
       // 2) Volume: luz suave de cima-esquerda e sombra embaixo, só sobre o personagem
       cctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -141,7 +150,7 @@ export function PuppetLayer({
       rctx.clearRect(0, 0, W, H);
       rctx.drawImage(charCanvas, 0, 0);
       rctx.globalCompositeOperation = 'source-in';
-      rctx.fillStyle = stage.rim;
+      rctx.fillStyle = room ? 'rgba(200,150,255,0.95)' : stage.rim;
       rctx.fillRect(0, 0, W, H);
       rctx.globalCompositeOperation = 'destination-out';
       rctx.drawImage(charCanvas, off, off * 0.6);
@@ -154,7 +163,12 @@ export function PuppetLayer({
       // 4) Palco (holofote + sombra no chão) e composição final
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, W, H);
-      if (!transparent) {
+      if (!transparent && room) {
+        backdrop ??= renderRoomBackdrop(W, H);
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(backdrop, 0, 0, W, H);
+        drawRoomGlow(ctx, W, H, now / 1000);
+      } else if (!transparent) {
         ctx.setTransform(scale, 0, 0, scale, tx, ty);
         ctx.globalCompositeOperation = 'lighter';
         const spot = ctx.createRadialGradient(500, 900, 60, 500, 900, 1100);
@@ -180,6 +194,12 @@ export function PuppetLayer({
         ctx.setTransform(1, 0, 0, 1, 0, 0);
       }
       ctx.drawImage(charCanvas, 0, 0);
+      if (!transparent && room) {
+        // Mesa na frente (acompanha o enquadramento do personagem)
+        ctx.setTransform(scale, 0, 0, scale, tx, ty);
+        drawDesk(ctx, st, now / 1000, controller.talk.level);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+      }
       // Média móvel do custo de desenho (diagnóstico de desempenho, lido pelo teste e pelo painel).
       drawMs = drawMs * 0.95 + (performance.now() - t0) * 0.05;
       (window as unknown as { __leviDrawMs?: number }).__leviDrawMs = drawMs;

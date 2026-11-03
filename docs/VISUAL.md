@@ -68,6 +68,18 @@ AnimationController ──► Pose ──► poseToLive2D() ──► parâmetro
   olhos vermelhos com pupila em fenda, marcas nas bochechas, pontas do cabelo vermelhas, aura).
 - **Roteiros com emoção:** `[provocador] Duvido! [rir] kkkk` troca a expressão junto com a fala.
 
+### Cenário e figurino (v0.3.1)
+
+- **Quarto gamer ZYNOX** (padrão): quarto medieval de madeira, janela e lanternas com luz
+  quente tremulando, neon roxo, banner com o emblema e fundo desfocado (profundidade de campo).
+  Na frente ficam a cadeira gamer, a mesa com teclado roxo (pulsa quando ele fala), mouse,
+  monitor e caneca com o emblema e o microfone de estúdio com LED (acende na fala).
+- **Figurinos:** moletom ZYNOX de streamer (forro roxo, cordões, camiseta branca) ou guerreiro.
+- O emblema ZYNOX é um desenho simples feito em código. Se o canal tiver um logo oficial
+  em arquivo, ele pode substituir o desenho.
+- Inspirado nas imagens de referência enviadas, **sem** copiar o personagem delas: o Levi
+  mantém olhos âmbar, penteado próprio e nenhuma marca na testa.
+
 ### Desempenho medido
 
 | Medida | Valor | Onde |

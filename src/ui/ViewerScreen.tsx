@@ -20,6 +20,8 @@ export default function ViewerScreen() {
     if (opts.camera) s.setCamera(opts.camera);
     if (opts.lighting) s.setLighting(opts.lighting);
     if (opts.avatar) s.setAvatarMode(opts.avatar);
+    if (opts.scene) s.setScene(opts.scene);
+    if (opts.outfit) s.setOutfit(opts.outfit);
     if (opts.vrm) s.setAvatarMode('3d');
     document.body.classList.toggle('transparent', opts.transparent);
   }, [opts]);

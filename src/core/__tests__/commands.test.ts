@@ -99,3 +99,12 @@ describe('parseCommand — fala e modo de avatar', () => {
     expect(parseCommand({ type: 'avatar', mode: '4d' })).toBeNull();
   });
 });
+
+describe('parseCommand — cenário e figurino', () => {
+  it('aceita valores conhecidos e rejeita o resto', () => {
+    expect(parseCommand({ type: 'scene', scene: 'quarto' })).toEqual({ type: 'scene', scene: 'quarto' });
+    expect(parseCommand({ type: 'outfit', outfit: 'guerreiro' })).toEqual({ type: 'outfit', outfit: 'guerreiro' });
+    expect(parseCommand({ type: 'scene', scene: 'lua' })).toBeNull();
+    expect(parseCommand({ type: 'outfit', outfit: 'pijama' })).toBeNull();
+  });
+});

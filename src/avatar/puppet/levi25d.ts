@@ -75,7 +75,17 @@ export const PALETTE = {
   horn: '#2a1622',
   hornShade: '#14080f',
   hornGlow: '#ff3355',
+  // Figurino streamer (marca ZYNOX)
+  hoodie: '#1d1a22',
+  hoodieShade: '#0f0d13',
+  hoodieLine: '#050407',
+  zynox: '#a35cff',
+  zynoxShade: '#6a2bc4',
+  tee: '#f1eef4',
+  teeShade: '#c9c2d6',
 } as const;
+
+export type Outfit = 'streamer' | 'guerreiro';
 
 const DEG = Math.PI / 180;
 /** 1 metro em unidades de desenho (personagem ~1,78 m ≈ 2350 unidades). */
@@ -111,6 +121,7 @@ export interface PuppetFrame {
   dt: number;
   time: number;
   hand: { left: HandShape; right: HandShape };
+  outfit?: Outfit;
 }
 
 export class Levi25D {
@@ -210,14 +221,19 @@ export class Levi25D {
 
     // ================= DESENHO (de trás para frente) =================
     if (demon > 0.02) this.drawAura(ctx, headCenter, demon, time);
-    this.drawCape(ctx, toBody, st, demon);
+    const outfit = f.outfit ?? 'guerreiro';
+    if (outfit === 'guerreiro') this.drawCape(ctx, toBody, st, demon);
     this.drawBackHair(ctx, headCenter, headRoll, par, st, demon);
-    for (const side of ['left', 'right'] as const) if (!arms[side].front) drawArm(ctx, arms[side], st, side);
+    for (const side of ['left', 'right'] as const) if (!arms[side].front) drawArm(ctx, arms[side], st, side, outfit);
     this.drawLegs(ctx, jump, st);
-    this.drawTails(ctx, toBody, st);
-    this.drawTorso(ctx, toBody, bodyYaw, st, demon, time);
+    if (outfit === 'guerreiro') {
+      this.drawTails(ctx, toBody, st);
+      this.drawTorso(ctx, toBody, bodyYaw, st, demon, time);
+    } else {
+      this.drawHoodie(ctx, toBody, bodyYaw, st, demon, time);
+    }
     this.drawHead(ctx, f, headCenter, headRoll, par, yaw, st);
-    for (const side of ['left', 'right'] as const) if (arms[side].front) drawArm(ctx, arms[side], st, side);
+    for (const side of ['left', 'right'] as const) if (arms[side].front) drawArm(ctx, arms[side], st, side, outfit);
   }
 
   // -------------------------------------------------------------------------------------------
@@ -368,6 +384,75 @@ export class Levi25D {
       ctx.lineWidth = 14;
       ctx.stroke(hem);
     });
+  }
+
+  /** Moletom preto com capuz forrado de roxo, camiseta branca e emblema ZYNOX. */
+  private drawHoodie(ctx: CanvasRenderingContext2D, toBody: (p: V) => V, yaw: number, st: Style, demon: number, time: number) {
+    const T = (pts: V[]) => pts.map(toBody);
+    const shift = Math.sin(yaw) * 28;
+    const hood = { base: PALETTE.hoodie, shade: PALETTE.hoodieShade, line: PALETTE.hoodieLine };
+    // Pescoço
+    const neck = smoothClosed(T([[462, 560], [538, 560], [546, 700], [454, 700]]), 0.5);
+    shape(ctx, neck, { base: PALETTE.skin, shade: PALETTE.skinShade, line: PALETTE.skinLine }, st, { shadeK: 2.5 });
+    ctx.save();
+    ctx.clip(neck);
+    ctx.fillStyle = PALETTE.skinShade;
+    ctx.fill(smoothClosed(T([[450, 560], [550, 560], [545, 615], [500, 632], [455, 615]]), 0.8));
+    ctx.restore();
+    // Capuz caído atrás dos ombros (forro roxo aparecendo)
+    const hoodBack = smoothClosed(T([[360, 700], [400, 630], [500, 615], [600, 630], [640, 700], [560, 690], [500, 700], [440, 690]]), 0.7);
+    shape(ctx, hoodBack, { base: PALETTE.zynoxShade, shade: '#3d1475', line: PALETTE.hoodieLine }, st);
+    // Corpo largo e solto do moletom (descendo até abaixo do quadril)
+    const body = smoothClosed(
+      T([[318, 700], [430, 668], [570, 668], [682, 700], [708, 790], [690, 930], [672, 1120], [690, 1230], [310, 1230], [328, 1120], [310, 930], [292, 790]]),
+      0.72,
+    );
+    shape(ctx, body, hood, st, { shadeK: 2.2 });
+    // Camiseta branca no decote aberto
+    const tee = smoothClosed(T([[452 + shift, 676], [548 + shift, 676], [538 + shift, 780], [500 + shift, 860], [462 + shift, 780]]), 0.6);
+    shape(ctx, tee, { base: PALETTE.tee, shade: PALETTE.teeShade, line: PALETTE.hoodieLine }, st, { shadeK: 1.5 });
+    // Bordas do zíper aberto com forro roxo
+    for (const s of [-1, 1]) {
+      const edge = ribbon(T([[500 + s * 54 + shift, 672], [500 + s * 40 + shift, 790], [500 + s * 12 + shift, 880], [500 + s * 10 + shift, 1220]]), [18, 16, 14, 14], false);
+      shape(ctx, edge, { base: PALETTE.zynox, shade: PALETTE.zynoxShade, line: PALETTE.hoodieLine }, st, { lineK: 0.6 });
+    }
+    // Cordões do capuz
+    for (const s of [-1, 1]) {
+      const swing = Math.sin(time * 1.3 + s) * 4;
+      const cord = smoothOpen(T([[500 + s * 46 + shift, 690], [500 + s * 50 + shift + swing, 800], [500 + s * 46 + shift + swing * 1.5, 905]]));
+      ctx.strokeStyle = PALETTE.zynox;
+      ctx.lineWidth = 9;
+      ctx.lineCap = 'round';
+      ctx.stroke(cord);
+      const tip = toBody([500 + s * 46 + shift + swing * 1.5, 905]);
+      ctx.fillStyle = '#d9d2e6';
+      ctx.fillRect(tip[0] - 6, tip[1], 12, 24);
+    }
+    // Emblema + "ZYNOX" no peito esquerdo do personagem (direita da tela)
+    const c = toBody([598 + shift * 0.8, 820]);
+    drawZynoxEmblem(ctx, c, 46, demon > 0.3 ? '#ff3d6e' : PALETTE.zynox, time);
+    ctx.save();
+    ctx.translate(c[0], c[1] + 52);
+    ctx.font = '700 30px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = PALETTE.zynox;
+    ctx.fillText('ZYNOX', 0, 0);
+    ctx.restore();
+    // Dobras do tecido
+    ctx.strokeStyle = PALETTE.hoodieLine;
+    ctx.globalAlpha = 0.7;
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    for (const fold of [
+      [[350, 820], [372, 900], [360, 980]],
+      [[650, 820], [628, 905], [640, 985]],
+      [[380, 1120], [420, 1180]],
+      [[620, 1120], [585, 1185]],
+    ] as V[][]) ctx.stroke(smoothOpen(T(fold)));
+    ctx.globalAlpha = 1;
+    // Barra (punho elástico) do moletom
+    const hem = smoothClosed(T([[312, 1195], [688, 1195], [690, 1240], [310, 1240]]), 0.4);
+    shape(ctx, hem, { base: '#151219', shade: PALETTE.hoodieShade, line: PALETTE.hoodieLine }, st);
   }
 
   private drawTorso(ctx: CanvasRenderingContext2D, toBody: (p: V) => V, yaw: number, st: Style, demon: number, time: number) {
@@ -875,8 +960,11 @@ function armChain(pose: Pose, side: 'left' | 'right', shoulderScreen: V, hand: H
   return { shoulder, elbow, wrist, handDir: norm(to2(dHa)), front: wrist3.z > 0.06, hand, depth: wrist3.z };
 }
 
-function drawArm(ctx: CanvasRenderingContext2D, a: ArmPose, st: Style, side: 'left' | 'right') {
-  const coat = { base: PALETTE.coat, shade: PALETTE.coatShade, line: PALETTE.coatLine };
+function drawArm(ctx: CanvasRenderingContext2D, a: ArmPose, st: Style, side: 'left' | 'right', outfit: Outfit = 'guerreiro') {
+  const streamer = outfit === 'streamer';
+  const coat = streamer
+    ? { base: PALETTE.hoodie, shade: PALETTE.hoodieShade, line: PALETTE.hoodieLine }
+    : { base: PALETTE.coat, shade: PALETTE.coatShade, line: PALETTE.coatLine };
   // Manga superior e antebraço (mais largos perto do ombro)
   const upper = ribbon([a.shoulder, lerpV(a.shoulder, a.elbow, 0.5), a.elbow], [110, 92, 84], false);
   shape(ctx, upper, coat, st, { shadeK: 1.8 });
@@ -910,7 +998,7 @@ function drawArm(ctx: CanvasRenderingContext2D, a: ArmPose, st: Style, side: 'le
   const cuff = ribbon([add(cuffC, mul(fd, -18)), add(cuffC, mul(fd, 18))], [84, 84], false);
   shape(ctx, cuff, { base: PALETTE.gold, shade: PALETTE.goldShade, line: PALETTE.goldLine }, st);
   // Ombreira dourada só no ombro esquerdo do personagem (assimetria do figurino)
-  if (side === 'left') {
+  if (side === 'left' && !streamer) {
     const ud = norm(sub(a.elbow, a.shoulder));
     const c = add(a.shoulder, mul(ud, 30));
     const plates = [0, 1, 2].map((i) => {
@@ -920,14 +1008,17 @@ function drawArm(ctx: CanvasRenderingContext2D, a: ArmPose, st: Style, side: 'le
     });
     for (let i = plates.length - 1; i >= 0; i--) shape(ctx, plates[i]!, { base: i ? '#3a3f6e' : PALETTE.gold, shade: i ? '#262a4a' : PALETTE.goldShade, line: PALETTE.coatLine }, st);
   }
-  drawHand(ctx, a, st);
+  drawHand(ctx, a, st, streamer);
 }
 
-function drawHand(ctx: CanvasRenderingContext2D, a: ArmPose, st: Style) {
+function drawHand(ctx: CanvasRenderingContext2D, a: ArmPose, st: Style, bare = false) {
   const d = a.handDir;
   const n = perp(d);
   const w = a.wrist;
-  const glove = { base: PALETTE.glove, shade: PALETTE.gloveShade, line: '#08060c' };
+  // Mão nua no figurino streamer; luva no de guerreiro.
+  const glove = bare
+    ? { base: PALETTE.skin, shade: PALETTE.skinShade, line: PALETTE.skinLine }
+    : { base: PALETTE.glove, shade: PALETTE.gloveShade, line: '#08060c' };
   const palmC = add(w, mul(d, 42));
   const palm = smoothClosed([add(w, mul(n, 30)), add(palmC, mul(n, 34)), add(palmC, add(mul(d, 38), mul(n, 22))), add(palmC, add(mul(d, 40), mul(n, -22))), add(palmC, mul(n, -34)), add(w, mul(n, -30))], 0.8);
   shape(ctx, palm, glove, st);
@@ -950,4 +1041,33 @@ function drawHand(ctx: CanvasRenderingContext2D, a: ArmPose, st: Style) {
       ctx.stroke();
     }
   }
+}
+
+/**
+ * Emblema ZYNOX (marca do canal): chifres curvos formando uma coroa com uma ponta central.
+ * Desenho simples e original, usado no moletom e no quarto.
+ */
+export function drawZynoxEmblem(ctx: CanvasRenderingContext2D, c: V, size: number, color: string, time = 0, glow = 0.6) {
+  const k = size / 50;
+  const p = new Path2D();
+  // asa/chifre esquerdo
+  p.moveTo(c[0] - 6 * k, c[1] + 30 * k);
+  p.quadraticCurveTo(c[0] - 46 * k, c[1] + 10 * k, c[0] - 44 * k, c[1] - 40 * k);
+  p.quadraticCurveTo(c[0] - 30 * k, c[1] - 6 * k, c[0] - 14 * k, c[1] - 4 * k);
+  p.lineTo(c[0] - 6 * k, c[1] - 26 * k);
+  // ponta central
+  p.lineTo(c[0], c[1] - 46 * k);
+  p.lineTo(c[0] + 6 * k, c[1] - 26 * k);
+  // chifre direito
+  p.lineTo(c[0] + 14 * k, c[1] - 4 * k);
+  p.quadraticCurveTo(c[0] + 30 * k, c[1] - 6 * k, c[0] + 44 * k, c[1] - 40 * k);
+  p.quadraticCurveTo(c[0] + 46 * k, c[1] + 10 * k, c[0] + 6 * k, c[1] + 30 * k);
+  p.lineTo(c[0], c[1] + 44 * k);
+  p.closePath();
+  ctx.save();
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 14 * k * glow * (0.8 + 0.2 * Math.sin(time * 2));
+  ctx.fillStyle = color;
+  ctx.fill(p);
+  ctx.restore();
 }
