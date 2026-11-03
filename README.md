@@ -160,5 +160,5 @@ docs/                  Arquitetura, avatar, clipes, roadmap, licenças
 scripts/smoke.mjs      Teste no navegador
 ```
 
-Mais detalhes: [Visual 2.5D](docs/VISUAL.md) · [Arquitetura](docs/ARQUITETURA.md) · [Avatar e modelo final](docs/AVATAR.md) · [Clipes cinematográficos](docs/CLIPES.md) ·
+Mais detalhes: [Ficha e prompts da arte oficial](docs/LEVI_ARTE_OFICIAL.md) · [Visual 2.5D](docs/VISUAL.md) · [Arquitetura](docs/ARQUITETURA.md) · [Avatar e modelo final](docs/AVATAR.md) · [Clipes cinematográficos](docs/CLIPES.md) ·
 [Roadmap](docs/ROADMAP.md) · [Licenças](docs/LICENCAS.md)

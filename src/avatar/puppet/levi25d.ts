@@ -146,7 +146,8 @@ export class Levi25D {
       strand([112, -142], [108, -18], 44, 0.86, 0.2, 3, 80),
       strand([142, -108], [156, 48], 36, 0.8, -0.2, 3, 75),
     ],
-    ahoge: strand([30, -228], [96, -318], 18, 0.1, 1.1, 3, 30),
+    // Trancinha atrás da orelha esquerda (marca registrada do Levi, ver docs/LEVI_ARTE_OFICIAL.md)
+    braid: strand([146, 0], [178, 205], 24, 0.5, -0.2, 4, 35),
     // Mechas de fundo, mais escuras, entre as da frente: dão profundidade à franja
     underBangs: [
       strand([-118, -132], [-140, 20], 40, 0.78, 0.35, 3, 70),
@@ -203,7 +204,7 @@ export class Levi25D {
     this.prevRoll = headRoll;
     const wind = demon > 0.05 ? (Math.sin(time * 9) + Math.sin(time * 13.7)) * 6 * demon : Math.sin(time * 0.9) * 0.6;
     const clampAcc = (a: number) => Math.max(-4000, Math.min(4000, a));
-    const allHair = [...this.hair.tufts, ...this.hair.sideLocks, ...this.hair.underBangs, ...this.hair.bangs, this.hair.ahoge];
+    const allHair = [...this.hair.tufts, ...this.hair.sideLocks, ...this.hair.underBangs, ...this.hair.bangs, this.hair.braid];
     for (const s of allHair) s.chain.step(dt, clampAcc(headAcc[0] + yawPush * s.depth), rollVel, wind * (0.5 + s.depth));
     const bodyPt = toBody([500, 900]);
     const bodyVel: V = this.prevBody ? mul(sub(bodyPt, this.prevBody), 1 / h) : [0, 0];
@@ -637,6 +638,8 @@ export class Levi25D {
 
     // Cabelo: topo (casquete), tufos, mechas laterais, franja, antena
     this.drawHairFront(ctx, f, par, st);
+    // Trancinha na frente da mecha lateral, caindo sobre o ombro
+    this.drawBraid(ctx, par, st, demon);
 
     // Sobrancelhas aparecem por cima da franja (convenção de anime)
     for (const s of [-1, 1] as const) {
@@ -825,6 +828,45 @@ export class Levi25D {
     return { path: ribbon(center, widths), center };
   }
 
+  /** Trancinha: mecha com padrão trançado e anel dourado perto da ponta. */
+  private drawBraid(ctx: CanvasRenderingContext2D, par: (d: number) => V, st: Style, demon: number) {
+    const b = this.hair.braid;
+    const { path, center } = this.strandPath(b, par);
+    const col = this.hairColors(demon, 0.1);
+    cel(ctx, path, col.base, col.shade, st, 1.2);
+    // padrão trançado: traços diagonais alternados ao longo da linha central
+    ctx.save();
+    ctx.clip(path);
+    ctx.strokeStyle = col.line;
+    ctx.lineWidth = 2.5;
+    ctx.globalAlpha = 0.7;
+    const steps = 9;
+    for (let i = 1; i < steps; i++) {
+      const t = i / steps;
+      const idx = t * (center.length - 1);
+      const a = center[Math.floor(idx)]!;
+      const c = center[Math.min(center.length - 1, Math.floor(idx) + 1)]!;
+      const p = lerpV(a, c, idx - Math.floor(idx));
+      const d = norm(sub(c, a));
+      const n = perp(d);
+      const w = b.width * (1 - t) * 0.6 + 4;
+      const sgn = i % 2 ? 1 : -1;
+      ctx.beginPath();
+      ctx.moveTo(p[0] + n[0] * w * sgn, p[1] + n[1] * w * sgn);
+      ctx.lineTo(p[0] + d[0] * 10, p[1] + d[1] * 10);
+      ctx.stroke();
+    }
+    ctx.restore();
+    outline(ctx, path, col.line, st, 0.8);
+    // anel dourado a 75% do comprimento
+    const ri = Math.round((center.length - 1) * 0.75);
+    const r = center[ri]!;
+    const rd = norm(sub(center[Math.min(center.length - 1, ri + 1)]!, center[Math.max(0, ri - 1)]!));
+    const rn = perp(rd);
+    const ring = ribbon([add(r, mul(rn, -13)), add(r, mul(rn, 13))], [12, 12], false);
+    shape(ctx, ring, { base: PALETTE.gold, shade: PALETTE.goldShade, line: PALETTE.goldLine }, st, { lineK: 0.6 });
+  }
+
   private drawStrand(ctx: CanvasRenderingContext2D, s: Strand, par: (d: number) => V, st: Style, demon: number, shade = 0) {
     const { path, center } = this.strandPath(s, par);
     const col = this.hairColors(demon, shade);
@@ -853,7 +895,6 @@ export class Levi25D {
     const demon = f.params.ParamDemon;
     // Tufos de trás/cima (atrás do casquete)
     for (const t of this.hair.tufts) this.drawStrand(ctx, t, par, st, demon, 0.12);
-    this.drawStrand(ctx, this.hair.ahoge, par, st, demon);
     // Casquete (topo da cabeça) com linha da raiz
     const o = par(0.3);
     ctx.save();
