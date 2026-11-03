@@ -78,7 +78,7 @@ export function AvatarStage({
         {!puppet && <LeviAvatar controller={controller} vrmUrl={vrmUrl} vrmIsFinal={vrmIsFinal} />}
         {!puppet && <FpsMeter />}
       </Canvas>
-      {puppet && <PuppetLayer controller={controller} fx={fx} resolution={q.fx2d + 0.25} />}
+      {puppet && <PuppetLayer controller={controller} fx={fx} resolution={q.fx2d + 0.25} transparent={transparent} />}
       <FxOverlay fx={fx} scale={q.fx2d} />
       <ClipOverlay muted={clipsMuted} onEnded={onClipEnded} />
     </div>

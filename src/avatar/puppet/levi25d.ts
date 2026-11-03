@@ -136,6 +136,13 @@ export class Levi25D {
       strand([142, -108], [156, 48], 36, 0.8, -0.2, 3, 75),
     ],
     ahoge: strand([30, -228], [96, -318], 18, 0.1, 1.1, 3, 30),
+    // Mechas de fundo, mais escuras, entre as da frente: dão profundidade à franja
+    underBangs: [
+      strand([-118, -132], [-140, 20], 40, 0.78, 0.35, 3, 70),
+      strand([-70, -160], [-128, -6], 44, 0.82, 0.45, 3, 75),
+      strand([45, -170], [-6, 0], 44, 0.86, 0.38, 3, 75),
+      strand([92, -152], [80, 4], 40, 0.82, 0.25, 3, 75),
+    ],
   };
   private cape = new SpringChain({ segments: 3, stiffness: 28, damping: 4, inertia: 1.4, tipSoftness: 0.5 });
   private tails = [new SpringChain({ segments: 2, stiffness: 35, damping: 5, inertia: 1.2 }), new SpringChain({ segments: 2, stiffness: 35, damping: 5, inertia: 1.2 })];
@@ -185,7 +192,7 @@ export class Levi25D {
     this.prevRoll = headRoll;
     const wind = demon > 0.05 ? (Math.sin(time * 9) + Math.sin(time * 13.7)) * 6 * demon : Math.sin(time * 0.9) * 0.6;
     const clampAcc = (a: number) => Math.max(-4000, Math.min(4000, a));
-    const allHair = [...this.hair.tufts, ...this.hair.sideLocks, ...this.hair.bangs, this.hair.ahoge];
+    const allHair = [...this.hair.tufts, ...this.hair.sideLocks, ...this.hair.underBangs, ...this.hair.bangs, this.hair.ahoge];
     for (const s of allHair) s.chain.step(dt, clampAcc(headAcc[0] + yawPush * s.depth), rollVel, wind * (0.5 + s.depth));
     const bodyPt = toBody([500, 900]);
     const bodyVel: V = this.prevBody ? mul(sub(bodyPt, this.prevBody), 1 / h) : [0, 0];
@@ -341,6 +348,16 @@ export class Levi25D {
       const bottomOuter = add(outerTop, rot([s * 75, 670], sw));
       const path = smoothClosed([top, outerTop, lerpV(outerTop, bottomOuter, 0.5), bottomOuter, lerpV(bottomOuter, bottomInner, 0.5), bottomInner], 0.6);
       shape(ctx, path, { base: PALETTE.coat, shade: PALETTE.coatShade, line: PALETTE.coatLine }, st, { shadeK: 1.6 });
+      // vincos verticais nas abas
+      ctx.strokeStyle = PALETTE.coatLine;
+      ctx.globalAlpha = 0.5;
+      ctx.lineWidth = 4;
+      for (const k of [0.35, 0.68]) {
+        const a0 = lerpV(top, outerTop, k);
+        const a1 = lerpV(bottomInner, bottomOuter, k);
+        ctx.stroke(smoothOpen([lerpV(a0, a1, 0.15), lerpV(a0, a1, 0.55), lerpV(a0, a1, 0.95)]));
+      }
+      ctx.globalAlpha = 1;
       // forro carmesim aparecendo na borda interna
       const lin = ribbon([top, lerpV(top, bottomInner, 0.5), bottomInner], [16, 16, 16], false);
       ctx.fillStyle = PALETTE.lining;
@@ -375,6 +392,18 @@ export class Levi25D {
       0.7,
     );
     shape(ctx, coat, { base: PALETTE.coat, shade: PALETTE.coatShade, line: PALETTE.coatLine }, st, { shadeK: 2 });
+    // Dobras do tecido (traços curtos de sombra, típicos de anime)
+    ctx.strokeStyle = PALETTE.coatLine;
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 4;
+    ctx.globalAlpha = 0.55;
+    for (const fold of [
+      [[360, 800], [385, 860], [372, 930]],
+      [[640, 800], [618, 870], [630, 940]],
+      [[400, 980], [418, 1040]],
+      [[600, 975], [585, 1042]],
+    ] as V[][]) ctx.stroke(smoothOpen(T(fold)));
+    ctx.globalAlpha = 1;
     // Camisa escura no decote em V
     const v = sharpClosed(T([[455 + shift, 662], [545 + shift, 662], [500 + shift, 800]]));
     ctx.fillStyle = PALETTE.shirt;
@@ -766,6 +795,7 @@ export class Levi25D {
     ctx.restore();
     // Mechas laterais longas e franja
     for (const s of this.hair.sideLocks) this.drawStrand(ctx, s, par, st, demon);
+    for (const b of this.hair.underBangs) this.drawStrand(ctx, b, par, st, demon, 0.35);
     for (const b of this.hair.bangs) this.drawStrand(ctx, b, par, st, demon);
   }
 
@@ -857,6 +887,23 @@ function drawArm(ctx: CanvasRenderingContext2D, a: ArmPose, st: Style, side: 'le
   ctx.beginPath();
   ctx.arc(a.elbow[0], a.elbow[1], 38, 0, Math.PI * 2);
   ctx.fill();
+  // Dobras na manga, perto do cotovelo
+  {
+    const ud = norm(sub(a.elbow, a.shoulder));
+    const n = perp(ud);
+    ctx.strokeStyle = PALETTE.coatLine;
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    for (const k of [-0.25, 0.2]) {
+      const p0 = add(a.elbow, add(mul(ud, -60 + k * 40), mul(n, k * 60)));
+      ctx.beginPath();
+      ctx.moveTo(p0[0], p0[1]);
+      ctx.quadraticCurveTo(p0[0] + ud[0] * 18 + n[0] * 14, p0[1] + ud[1] * 18 + n[1] * 14, p0[0] + ud[0] * 34, p0[1] + ud[1] * 34);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
   // Punho dourado
   const fd = norm(sub(a.wrist, a.elbow));
   const cuffC = add(a.wrist, mul(fd, -20));

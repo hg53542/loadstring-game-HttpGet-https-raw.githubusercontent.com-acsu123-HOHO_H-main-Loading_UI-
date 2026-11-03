@@ -17,6 +17,7 @@ demoníaco de anime, que respira, pisca, olha, gesticula, muda de emoção e se 
 
 ## Visual: Levi anime 2.5D (padrão desde a v0.3)
 
+![Rosto, busto e corpo](docs/img/levi-2-5d-acabamento.png)
 ![Expressões](docs/img/expressoes-2-5d.png)
 ![Provocador, concentrado, rindo, forma demoníaca](docs/img/expressoes-2-5d-b.png)
 ![Corpo: aceno na forma demoníaca e gesto de pensar](docs/img/corpo-2-5d.png)
