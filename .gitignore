@@ -12,3 +12,5 @@ smoke-output/
 # Saídas das skills de trading (só a config demo vai para o git)
 trader/*
 !trader/config.json
+__pycache__/
+*.pyc
